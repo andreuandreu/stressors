@@ -2,10 +2,7 @@ import random
 import pickle
 from dataclasses import dataclass, field
 from typing import List, Tuple
-
-FRAME_SIZE = 222
-TARGET_CELLS = 111
-RADIUS = 33
+from config import RADIUS, SIZE_PIX, NX_CELLS, NY_CELLS, NMERGE
 
 @dataclass
 class Cell:
@@ -142,7 +139,7 @@ def merge_cells(cells_to_merge: List[Cell]) -> Cell:
 
 
 def generate_cells() -> List[Cell]:
-    """Create an initial 12x12 grid of 10px squares and perform exactly 22 merge operations.
+    """Create an initial NX_CELLS x NY_CELLS grid of SIZE_PIX px squares and perform exactly NMERGE operations.
 
     The old version used while loops that could run many times; here we simply
     execute a fixed number of merges.  Each merge picks a random starting cell
@@ -152,11 +149,11 @@ def generate_cells() -> List[Cell]:
     """
     # initialize grid cells
     cells: List[Cell] = []
-    for i in range(12):
-        for j in range(12):
-            x0 = i * 10
-            y0 = j * 10
-            cells.append(Cell([(x0, y0), (x0 + 10, y0), (x0 + 10, y0 + 10), (x0, y0 + 10)]))
+    for i in range(NY_CELLS):
+        for j in range(NX_CELLS):
+            x0 = i * SIZE_PIX
+            y0 = j * SIZE_PIX
+            cells.append(Cell([(x0, y0), (x0 + SIZE_PIX, y0), (x0 + SIZE_PIX, y0 + SIZE_PIX), (x0, y0 + SIZE_PIX)]))
 
     def attempt_merge(cells: List[Cell]) -> List[Cell]:
         """Try to merge a random cluster; return updated cell list."""
@@ -190,7 +187,7 @@ def generate_cells() -> List[Cell]:
         return cells
 
     # perform a fixed number of merges
-    merges = 22
+    merges = NMERGE
     for _ in range(merges):
         cells = attempt_merge(cells)
     return cells
