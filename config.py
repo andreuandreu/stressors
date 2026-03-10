@@ -46,4 +46,4 @@ YRS_THRES = 3
 # ============================================================================
 # Simulation Parameters
 # ============================================================================
-DURATION_YEARS = 50
+DURATION_YEARS = 50 + YRS_THRES  # Total simulation duration in years (including threshold period)

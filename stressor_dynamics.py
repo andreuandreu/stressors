@@ -61,7 +61,7 @@ class StressorDynamics:
         self.duration_years = duration_years if duration_years is not None else DURATION_YEARS
         self.radius = radius if radius is not None else RADIUS
         self.ncells = len(cells)
-        self.time = 0
+        self.time = YRS_THRES + 1  # Start at YRS_THRES to allow for initial memory accumulation
         
         # Initialize extended state for each cell
         self.cell_states: List[CellDynamicsState] = []
@@ -77,7 +77,8 @@ class StressorDynamics:
             state = CellDynamicsState(cell=cell)
             
             # Forcing dynamics initialization
-            state.memory = np.random.uniform(0, 1)
+            state.severity = np.random.uniform(0, 1)  # Initial severity at t=0
+            state.memory = np.random.uniform(0, 111)
             
             # Effort dynamics initialization
             state.stubborn = np.random.random() < self.NSTUBBORN
@@ -180,17 +181,34 @@ class StressorDynamics:
                 continue
             
             # For susceptible cells, compute willing cost and decision
-            if not state.stubborn or state.cell.active:
+            if  not state.stubborn or state.cell.active:
+                # Calculate smoothed severity over last YRS_THRES years
+                # smoothSeb(t) = sum(severity from t-YRS_THRES to t) / sum(events in same window)
+                severity_window_start = max(0, t - YRS_THRES)
+                smoothed_severity = 0.0
+                total_events_in_window = 0.0
+                
+                for time_idx in range(severity_window_start, t + 1):
+                    if time_idx < len(state.severity_history):
+                        smoothed_severity += state.severity_history[time_idx]
+                        total_events_in_window += state.num_events_history[time_idx]
+                
+                # Use smoothed severity, normalized by total events in window
+                if total_events_in_window > 0:
+                    smoothed_severity = smoothed_severity / total_events_in_window
+                else:
+                    smoothed_severity = state.severity
+                
                 # Compute willing cost
-                # willingCost(t) = exposure*capacity*severity/log(decay*memory*Nevents)
+                # willingCost(t) = exposure*capacity*smoothedSeverity/log(decay*memory*Nevents)
                 # Avoid log of zero or negative
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
-                denominator = np.log(max(  memory_term * nevents_term/self.DECAY, 1.0))
+                denominator = np.log( memory_term * nevents_term/self.DECAY)
                 
                 if denominator > 0:
                     state.willing_cost = (
-                        state.exposure * state.capacity * state.severity / denominator
+                        state.exposure * state.capacity * smoothed_severity / denominator
                     )
                 else:
                     state.willing_cost = 0.0
@@ -298,7 +316,7 @@ def main():
     print(f"Loaded {len(cells)} cells\n")
     
     # Create and run simulation
-    dynamics = StressorDynamics(cells, duration_years=50, radius=33.0)
+    dynamics = StressorDynamics(cells, duration_years=DURATION_YEARS, radius=RADIUS)
     results = dynamics.run_simulation()
     
     # Save results
