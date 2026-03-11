@@ -142,7 +142,8 @@ def main():
     print("Loading results from stressor_dynamics_results.pkl...")
     results = load_results()
     
-    cell_id = 22
+
+    cell_id = int(sys.argv[1]) if len(sys.argv) > 1 else 13  # Default to cell 13 (0-indexed 12)
     cell_idx = cell_id - 1  # Convert to 0-indexed
     
     print(f"Extracting metrics for cell {cell_id} (index {cell_idx})...")
@@ -152,7 +153,7 @@ def main():
     fig = plot_single_cell(metrics, cell_id)
     
     # Save figure
-    fig.savefig(f'cell_{cell_id}_dynamics.png', dpi=300, bbox_inches='tight')
+    fig.savefig(f'./plots/cell_{cell_id}_dynamics.png', dpi=300, bbox_inches='tight')
     print(f"Plot saved to cell_{cell_id}_dynamics.png")
     
     # Print summary statistics

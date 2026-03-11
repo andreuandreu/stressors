@@ -78,7 +78,7 @@ class StressorDynamics:
             
             # Forcing dynamics initialization
             state.severity = np.random.uniform(0, 1)  # Initial severity at t=0
-            state.memory = np.random.uniform(0, YRS_THRES*2)  # Random initial memory to avoid all starting at 0
+            state.memory = np.random.uniform(YRS_THRES, 222)  # Random initial memory to avoid all starting at 0
             
             # Effort dynamics initialization
             state.stubborn = np.random.random() < self.NSTUBBORN
@@ -86,10 +86,7 @@ class StressorDynamics:
             
             # Capacity depends on cell area (as proxy for cellSize)
             cell_size = cell.area if cell.area > 0 else 1
-            state.capacity = np.random.uniform(
-                self.NEEDED_COST, 
-                self.MAX_CAP * self.NEEDED_COST
-            ) * cell_size
+            state.capacity = np.random.uniform( self.NEEDED_COST/10,  self.NEEDED_COST) * np.sqrt(cell_size)
             
             self.cell_states.append(state)
     
@@ -103,7 +100,7 @@ class StressorDynamics:
         Returns:
             Total number of events Nevents(t) = Ncells/10.0 * t
         """
-        return (self.ncells / 10.0) * t + 10  # Added +10 to ensure some events at t=0
+        return (self.ncells / 10.0) * t + 1  # Added +1 to ensure some events at t=0
     
     def distribute_events(self, nevents: float):
         """
@@ -195,7 +192,7 @@ class StressorDynamics:
                 
                 # Use smoothed severity, normalized by total events in window
                 if total_events_in_window > 0:
-                    smoothed_severity = smoothed_severity / total_events_in_window
+                    smoothed_severity = smoothed_severity #/ total_events_in_window
                 else:
                     smoothed_severity = state.severity
                 
@@ -204,18 +201,15 @@ class StressorDynamics:
                 # Avoid log of zero or negative
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
-                denominator = np.log( memory_term * nevents_term/self.DECAY)
+                denominator = np.log( 1+ memory_term * nevents_term/(self.DECAY*len(self.cell_states) ) ) + 1  # +1 to prevent log(x) < 1
+                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
+                    print(f"Year {t}: Cell 13 - smoothed_severity={smoothed_severity:.4f}, denominator={denominator:.4f}")
+                state.willing_cost = state.exposure  * np.log(smoothed_severity + 1) * self.MAX_CAP  / denominator
                 
-                if denominator > 0:
-                    state.willing_cost = (
-                        state.exposure * state.capacity * smoothed_severity / denominator
-                    )
-                else:
-                    state.willing_cost = 0.0
-                
+                recapacity = np.random.uniform(state.capacity, (1+state.willing_cost) * state.capacity)
                 # Decision: activate if DeltaCost < 0
                 # DeltaCost = neededCost - willingCost
-                delta_cost = self.NEEDED_COST - state.willing_cost
+                delta_cost = self.NEEDED_COST - recapacity#state.willing_cost
                 
                 # Check social influence from neighbors
                 active_radius_neighbors = sum(

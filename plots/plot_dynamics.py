@@ -114,7 +114,7 @@ def main():
     fig = plot_dynamics(metrics)
     
     # Save figure
-    fig.savefig('stressor_dynamics_plots.png', dpi=300, bbox_inches='tight')
+    fig.savefig('./plots/stressor_dynamics_plots.png', dpi=300, bbox_inches='tight')
     print("Plot saved to stressor_dynamics_plots.png")
     
     # Show summary statistics
