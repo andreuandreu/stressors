@@ -1,11 +1,13 @@
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+sys.path.append('./')
 from stressor_dynamics import CellDynamicsState
-from config import SEV_THRESHOLD, NEEDED_COST
+from config import SEV_THRESHOLD, NEEDED_COST, YRS_THRES
 
 
-def load_results(filename: str = 'stressor_dynamics_results.pkl'):
+def load_results(filename: str = './data/stressor_dynamics_results.pkl'):
     """Load simulation results from pickle file."""
     with open(filename, 'rb') as f:
         results = pickle.load(f)
@@ -58,7 +60,7 @@ def extract_single_cell_metrics(results, cell_idx: int = 12):  # 0-indexed, so 1
     }
 
 
-def plot_single_cell(metrics, cell_id: int = 13):
+def plot_single_cell(metrics, cell_id: int = 18):
     """Create 2x2 subplot figure for single cell dynamics."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(f'Cell {cell_id} Dynamics Over Time', fontsize=16, fontweight='bold')
@@ -81,8 +83,8 @@ def plot_single_cell(metrics, cell_id: int = 13):
     
     # Plot 1: Memory
     ax = axes[0, 0]
-    ax.plot(time, memory, 'b-', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time, memory, alpha=0.3, color='blue')
+    ax.plot(time[YRS_THRES*2:], memory[YRS_THRES*2:], 'b-', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES*2:], memory[YRS_THRES*2:], alpha=0.3, color='blue')
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Memory (years)', fontsize=11)
     ax.set_title('Memory - Time Since Last Severe Event', fontsize=12, fontweight='bold')
@@ -90,8 +92,8 @@ def plot_single_cell(metrics, cell_id: int = 13):
     
     # Plot 2: Severity
     ax = axes[0, 1]
-    ax.plot(time, severity, 'r-', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time, severity, alpha=0.3, color='red')
+    ax.plot(time[YRS_THRES*2:] , severity[YRS_THRES*2:], 'r-', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES*2:], severity[YRS_THRES*2:], alpha=0.3, color='red')
     ax.axhline(y=SEV_THRESHOLD, color='k', linestyle='--', linewidth=1, alpha=0.5, label=f'Threshold={SEV_THRESHOLD}')
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Severity', fontsize=11)
@@ -101,7 +103,7 @@ def plot_single_cell(metrics, cell_id: int = 13):
     
     # Plot 3: Active neighbors in radius
     ax = axes[1, 0]
-    ax.bar(time, active_neighbors, width=0.8, color='purple', alpha=0.7, edgecolor='black')
+    ax.bar(time[YRS_THRES*2:], active_neighbors[YRS_THRES*2:], width=0.8, color='purple', alpha=0.7, edgecolor='black')
     ax.axhline(y=total_neighbors/2, color='k', linestyle='--', linewidth=1, alpha=0.5, 
                label=f'Half of total neighbors ({total_neighbors/2:.0f})')
     ax.set_xlabel('Time (years)', fontsize=11)
@@ -113,8 +115,8 @@ def plot_single_cell(metrics, cell_id: int = 13):
     
     # Plot 4: Willing cost
     ax = axes[1, 1]
-    ax.plot(time, willing_cost, 'orange', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time, willing_cost, alpha=0.3, color='orange')
+    ax.plot(time[YRS_THRES*2:], willing_cost[YRS_THRES*2:], 'orange', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES*2:], willing_cost[YRS_THRES*2:], alpha=0.3, color='orange')
     ax.axhline(y=0, color='k', linestyle='--', linewidth=1, alpha=0.5, label='Breakeven (WC=0)')
     ax.axhline(y=NEEDED_COST, color='gray', linestyle='--', linewidth=1, alpha=0.5, label=f'Needed Cost (${NEEDED_COST})')
     ax.set_xlabel('Time (years)', fontsize=11)
@@ -140,7 +142,7 @@ def main():
     print("Loading results from stressor_dynamics_results.pkl...")
     results = load_results()
     
-    cell_id = 13
+    cell_id = 22
     cell_idx = cell_id - 1  # Convert to 0-indexed
     
     print(f"Extracting metrics for cell {cell_id} (index {cell_idx})...")

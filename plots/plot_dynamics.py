@@ -1,11 +1,13 @@
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+sys.path.append('./')
 from stressor_dynamics import CellDynamicsState
 from config import NEEDED_COST
 
 
-def load_results(filename: str = 'stressor_dynamics_results.pkl'):
+def load_results(filename: str = './data/stressor_dynamics_results.pkl'):
     """Load simulation results from pickle file."""
     with open(filename, 'rb') as f:
         results = pickle.load(f)
@@ -103,7 +105,6 @@ def plot_dynamics(metrics):
 
 def main():
     """Load results, extract metrics, and create plots."""
-    print("Loading results from stressor_dynamics_results.pkl...")
     results = load_results()
     
     print("Extracting metrics...")

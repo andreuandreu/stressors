@@ -41,7 +41,7 @@ NEEDED_COST = 500.0
 MAX_CAP = 1.1
 
 # Consecutive years threshold for deactivation (if DeltaCost > 0 for this many years, deactivate)
-YRS_THRES = 3
+YRS_THRES = 2
 
 # ============================================================================
 # Simulation Parameters

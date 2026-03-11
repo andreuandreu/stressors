@@ -78,7 +78,7 @@ class StressorDynamics:
             
             # Forcing dynamics initialization
             state.severity = np.random.uniform(0, 1)  # Initial severity at t=0
-            state.memory = np.random.uniform(0, 111)
+            state.memory = np.random.uniform(0, YRS_THRES*2)  # Random initial memory to avoid all starting at 0
             
             # Effort dynamics initialization
             state.stubborn = np.random.random() < self.NSTUBBORN
@@ -103,7 +103,7 @@ class StressorDynamics:
         Returns:
             Total number of events Nevents(t) = Ncells/10.0 * t
         """
-        return (self.ncells / 10.0) * t
+        return (self.ncells / 10.0) * t + 10  # Added +10 to ensure some events at t=0
     
     def distribute_events(self, nevents: float):
         """
@@ -292,7 +292,7 @@ class StressorDynamics:
         
         return results
     
-    def save_results(self, filename: str = 'stressor_dynamics_results.pkl'):
+    def save_results(self, filename: str = './data/stressor_dynamics_results.pkl'):
         """Save simulation results to file."""
         results = {
             'time_history': self.time_history,
@@ -310,7 +310,7 @@ def main():
     """Main entry point: load cells and run stressor dynamics simulation."""
     # Load cells from file
     print("Loading cells from cells_state.pkl...")
-    with open('cells_state.pkl', 'rb') as f:
+    with open('./data/cells_state.pkl', 'rb') as f:
         cells = pickle.load(f)
     
     print(f"Loaded {len(cells)} cells\n")
@@ -320,7 +320,7 @@ def main():
     results = dynamics.run_simulation()
     
     # Save results
-    dynamics.save_results('stressor_dynamics_results.pkl')
+    dynamics.save_results('./data/stressor_dynamics_results.pkl')
     
     # Print summary statistics
     print("\n=== SUMMARY STATISTICS ===")
