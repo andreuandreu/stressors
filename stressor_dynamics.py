@@ -86,7 +86,7 @@ class StressorDynamics:
             
             # Capacity depends on cell area (as proxy for cellSize)
             cell_size = cell.area if cell.area > 0 else 1
-            state.capacity = np.random.uniform( self.NEEDED_COST/10,  self.NEEDED_COST) * np.sqrt(cell_size)
+            state.capacity = np.random.uniform( self.MAX_CAP, 1) * np.sqrt(cell_size)
             
             self.cell_states.append(state)
     
@@ -203,17 +203,19 @@ class StressorDynamics:
                 nevents_term = max(nevents, 1.0)  # Prevent zero
                 denominator =  np.log( 1+ memory_term * nevents_term/(self.DECAY*len(self.cell_states) ) ) + 1  # +1 to prevent log(x) < 1
                 
-                state.willing_cost = state.exposure  * smoothed_severity * self.MAX_CAP * state.capacity  / denominator
-                #state.willing_cost = state.exposure  * state.severity * self.MAX_CAP * state.capacity / denominator
+                #state.willing_cost = state.exposure  * smoothed_severity * self.MAX_CAP * state.capacity  / denominator
+                state.willing_cost = state.exposure  * state.severity * self.NEEDED_COST / (denominator*MAX_CAP)  # Scale by MAX_CAP to keep costs in reasonable range
                 
-                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
-                    print(f"Year {t}: Cell 13 - severity {state.severity:.4f}, smoothed_severity={smoothed_severity:.4f}, denominator={denominator:.4f}, willing_cost={state.willing_cost:.4f}, nevents={nevents:.2f}")
-                
-
-                recapacity = np.random.uniform(state.capacity, (1+state.willing_cost) )
+                recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
                 # Decision: activate if DeltaCost < 0
                 # DeltaCost = neededCost - willingCost
-                delta_cost = self.NEEDED_COST - recapacity#state.willing_cost
+                delta_cost = self.NEEDED_COST - state.willing_cost#recapacity#
+
+                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
+                    print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f}, recap.={recapacity:.1f}, nev.={nevents_term/len(self.cell_states):.2f}")
+                
+
+                
                 
                 # Check social influence from neighbors
                 active_radius_neighbors = sum(
