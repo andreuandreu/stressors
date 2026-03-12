@@ -201,12 +201,16 @@ class StressorDynamics:
                 # Avoid log of zero or negative
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
-                denominator = np.log( 1+ memory_term * nevents_term/(self.DECAY*len(self.cell_states) ) ) + 1  # +1 to prevent log(x) < 1
-                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
-                    print(f"Year {t}: Cell 13 - smoothed_severity={smoothed_severity:.4f}, denominator={denominator:.4f}")
-                state.willing_cost = state.exposure  * np.log(smoothed_severity + 1) * self.MAX_CAP  / denominator
+                denominator =  np.log( 1+ memory_term * nevents_term/(self.DECAY*len(self.cell_states) ) ) + 1  # +1 to prevent log(x) < 1
                 
-                recapacity = np.random.uniform(state.capacity, (1+state.willing_cost) * state.capacity)
+                state.willing_cost = state.exposure  * smoothed_severity * self.MAX_CAP * state.capacity  / denominator
+                #state.willing_cost = state.exposure  * state.severity * self.MAX_CAP * state.capacity / denominator
+                
+                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
+                    print(f"Year {t}: Cell 13 - severity {state.severity:.4f}, smoothed_severity={smoothed_severity:.4f}, denominator={denominator:.4f}, willing_cost={state.willing_cost:.4f}, nevents={nevents:.2f}")
+                
+
+                recapacity = np.random.uniform(state.capacity, (1+state.willing_cost) )
                 # Decision: activate if DeltaCost < 0
                 # DeltaCost = neededCost - willingCost
                 delta_cost = self.NEEDED_COST - recapacity#state.willing_cost
