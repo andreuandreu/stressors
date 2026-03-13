@@ -31,36 +31,54 @@ def extract_metrics(results):
     
     # Calculate mean severity over time
     mean_severity = []
+    std_severity = []
     for t in range(ntime):
         severities = [state.severity_history[t] for state in cell_states]
         mean_severity.append(np.mean(severities))
+        std_severity.append(np.std(severities))
     
     # Calculate mean delta cost over time
     mean_delta_cost = []
+    var_delta_cost = []
+    max_delta_cost = []
+    min_delta_cost = []
     for t in range(ntime):
         delta_costs = [state.delta_cost_history[t] for state in cell_states]
         mean_delta_cost.append(np.mean(delta_costs))
+        var_delta_cost.append(np.std(delta_costs))
+        max_delta_cost.append(max(delta_costs))
+        min_delta_cost.append(min(delta_costs))
+
+
     
     return {
         'time': time_history,
         'nevents': nevents_history,
         'active_percentage': active_percentage,
         'mean_severity': mean_severity,
+        'std_severity': std_severity,
         'mean_delta_cost': mean_delta_cost,
+        'var_delta_cost': var_delta_cost,
+        'max_delta_cost': max_delta_cost,
+        'min_delta_cost': min_delta_cost
     }
 
 
 def plot_dynamics(metrics):
     """Create 2x2 subplot figure with all metrics."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle('Stressor Dynamics Simulation Results', fontsize=16, fontweight='bold')
+    #fig.suptitle('Stressor Dynamics Simulation Results', fontsize=16, fontweight='bold')
     
     time = metrics['time']
     nevents = metrics['nevents']
     active_pct = metrics['active_percentage']
-    mean_sev = metrics['mean_severity']
-    mean_dc = metrics['mean_delta_cost']
-    
+    mean_sev = np.array(metrics['mean_severity'])
+    std_sev = np.array(metrics['std_severity'])
+    mean_dc = np.array(metrics['mean_delta_cost'])
+    var_dc = np.array(metrics['var_delta_cost'])
+    max_dc = np.array(metrics['max_delta_cost'])
+    min_dc = np.array(metrics['min_delta_cost'])
+
     # Plot 1: Percentage of active cells
     ax = axes[0, 0]
     ax.plot(time, active_pct, 'b-', linewidth=2, label='Active cells %')
@@ -83,7 +101,7 @@ def plot_dynamics(metrics):
     # Plot 3: Mean severity
     ax = axes[1, 0]
     ax.plot(time, mean_sev, 'r-', linewidth=2, label='Mean severity')
-    ax.fill_between(time, mean_sev, alpha=0.3, color='red')
+    ax.fill_between(time, mean_sev-std_sev, mean_sev+std_sev, alpha=0.3, color='red')
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Mean Severity', fontsize=11)
     ax.set_title('Mean Severity Over Time', fontsize=12, fontweight='bold')
@@ -92,7 +110,7 @@ def plot_dynamics(metrics):
     # Plot 4: Mean delta cost
     ax = axes[1, 1]
     ax.plot(time, mean_dc, 'purple', linewidth=2, label='Mean delta cost')
-    ax.fill_between(time, mean_dc, alpha=0.3, color='purple')
+    ax.fill_between(time, mean_dc-var_dc, max_dc, alpha=0.3, color='purple')
     ax.axhline(y=0, color='k', linestyle='--', linewidth=1, alpha=0.5)
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Mean Delta Cost ($)', fontsize=11)
@@ -120,14 +138,7 @@ def main():
     # Show summary statistics
     print("\n=== SUMMARY STATISTICS ===")
     print(f"Final % active cells: {metrics['active_percentage'][-1]:.1f}%")
-    print(f"Final number of events: {metrics['nevents'][-1]:.1f}")
-    print(f"Mean severity (final): {metrics['mean_severity'][-1]:.4f}")
-    print(f"Mean delta cost (final): {metrics['mean_delta_cost'][-1]:.2f}")
-    print(f"Max mean severity: {max(metrics['mean_severity']):.4f}")
-    print(f"Min mean severity: {min(metrics['mean_severity']):.4f}")
-    print(f"Max mean delta cost: {max(metrics['mean_delta_cost']):.2f}")
-    print(f"Min mean delta cost: {min(metrics['mean_delta_cost']):.2f}")
-    
+
     # Uncomment to display plot in interactive mode
     plt.show()
 

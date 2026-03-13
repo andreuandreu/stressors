@@ -23,7 +23,7 @@ NEV_BETA = 0.1
 SEV_THRESHOLD = 0.22
 
 # Decay parameter for willing cost calculation
-DECAY = 3.3
+DECAY = 1.0
 
 # ============================================================================
 # Effort Dynamics Parameters
@@ -38,7 +38,7 @@ STUBORNESS = 0.9
 NEEDED_COST = 500.0
 
 # Scaling factor for capacity distribution
-MAX_CAP = 0.1
+MAX_CAP = 1.0
 
 # Consecutive years threshold for deactivation (if DeltaCost > 0 for this many years, deactivate)
 YRS_THRES = 3

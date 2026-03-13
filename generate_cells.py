@@ -218,9 +218,9 @@ def main():
     compute_neighbours(cells)
     
     # Save cells to file
-    with open('cells_state.pkl', 'wb') as f:
+    with open('cells_state_2.pkl', 'wb') as f:
         pickle.dump(cells, f)
-    print(f"Saved {len(cells)} cells to cells_state.pkl\n")
+    print(f"Saved {len(cells)} cells to cells_state_2.pkl\n")
     
     # Print summary
     for idx, c in enumerate(cells, start=1):

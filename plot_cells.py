@@ -11,7 +11,7 @@ from generate_cells import Cell  # Import Cell class so pickle can find it
 
 def load_cells():
     """Load cells from pickle file and compute neighbours if needed."""
-    with open('cells_state.pkl', 'rb') as f:
+    with open('cells_state_2.pkl', 'rb') as f:
         cells = pickle.load(f)
     # ensure neighbours are populated
     try:
