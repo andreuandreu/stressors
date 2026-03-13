@@ -106,7 +106,7 @@ Each cell has fixed characteristics determined at initialization:
 
 The "willing cost" represents how much the agent is willing to spend, based on current stress exposure:
 
-$$W_i(t) = \frac{E_i \cdot C_i \cdot S_i(t)}{\ln\left(\frac{ M_i(t) \cdot N_{\text{events}}(t)}{D} \right)}$$
+$$W_i(t) = \frac{ M_i(t) \cdot E_i \cdot C_i \cdot \S_i(t)}{N_{\text{events}}(t)^{1/2}{D} }$$
 
 where $D = $ DECAY $= 3.3$[yr]
 
