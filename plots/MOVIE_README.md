@@ -72,7 +72,7 @@ python3 generate_cells.py
 python3 stressor_dynamics.py
 
 # 3. Create movie
-python3 create_movie.py
+python3 ./plots/create_movie.py
 ```
 
 All scripts automatically use parameters from `config.py`, so you can modify the simulation by editing that file.

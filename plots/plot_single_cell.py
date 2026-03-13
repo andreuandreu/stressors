@@ -57,13 +57,14 @@ def extract_single_cell_metrics(results, cell_idx: int = 12):  # 0-indexed, so 1
         'willing_cost': willing_cost_history,
         'cell_active': cell_state.active_history,
         'total_radius_neighbors': len(cell.radius_neighbours),
+        'cell_area': cell.area
     }
 
 
 def plot_single_cell(metrics, cell_id: int = 18):
     """Create 2x2 subplot figure for single cell dynamics."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f'Cell {cell_id} Dynamics Over Time', fontsize=16, fontweight='bold')
+    fig.suptitle(f'Cell {cell_id} (Neighbours: {metrics["total_radius_neighbors"]}, area: {metrics["cell_area"]}px)', fontsize=16, fontweight='bold')
     
     time = metrics['time']
     memory = metrics['memory']
@@ -83,8 +84,8 @@ def plot_single_cell(metrics, cell_id: int = 18):
     
     # Plot 1: Memory
     ax = axes[0, 0]
-    ax.plot(time[YRS_THRES*2:], memory[YRS_THRES*2:], 'b-', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time[YRS_THRES*2:], memory[YRS_THRES*2:], alpha=0.3, color='blue')
+    ax.plot(time[YRS_THRES:], 1/np.array(memory[YRS_THRES:]), 'b-', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES:], 1/np.array(memory[YRS_THRES:]), alpha=0.3, color='blue')
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Memory (years)', fontsize=11)
     ax.set_title('Memory - Time Since Last Severe Event', fontsize=12, fontweight='bold')
@@ -92,8 +93,8 @@ def plot_single_cell(metrics, cell_id: int = 18):
     
     # Plot 2: Severity
     ax = axes[0, 1]
-    ax.plot(time[YRS_THRES*2:] , severity[YRS_THRES*2:], 'r-', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time[YRS_THRES*2:], severity[YRS_THRES*2:], alpha=0.3, color='red')
+    ax.plot(time[YRS_THRES:] , severity[YRS_THRES:], 'r-', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES:], severity[YRS_THRES:], alpha=0.3, color='red')
     ax.axhline(y=SEV_THRESHOLD, color='k', linestyle='--', linewidth=1, alpha=0.5, label=f'Threshold={SEV_THRESHOLD}')
     ax.set_xlabel('Time (years)', fontsize=11)
     ax.set_ylabel('Severity', fontsize=11)
@@ -103,7 +104,7 @@ def plot_single_cell(metrics, cell_id: int = 18):
     
     # Plot 3: Active neighbors in radius
     ax = axes[1, 0]
-    ax.bar(time[YRS_THRES*2:], active_neighbors[YRS_THRES*2:], width=0.8, color='purple', alpha=0.7, edgecolor='black')
+    ax.bar(time[YRS_THRES:], active_neighbors[YRS_THRES:], width=0.8, color='purple', alpha=0.7, edgecolor='black')
     ax.axhline(y=total_neighbors/2, color='k', linestyle='--', linewidth=1, alpha=0.5, 
                label=f'Half of total neighbors ({total_neighbors/2:.0f})')
     ax.set_xlabel('Time (years)', fontsize=11)
@@ -115,8 +116,8 @@ def plot_single_cell(metrics, cell_id: int = 18):
     
     # Plot 4: Willing cost
     ax = axes[1, 1]
-    ax.plot(time[YRS_THRES*2:], willing_cost[YRS_THRES*2:], 'orange', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time[YRS_THRES*2:], willing_cost[YRS_THRES*2:], alpha=0.3, color='orange')
+    ax.plot(time[YRS_THRES:], willing_cost[YRS_THRES:], 'orange', linewidth=2, marker='o', markersize=3)
+    ax.fill_between(time[YRS_THRES:], willing_cost[YRS_THRES:], alpha=0.3, color='orange')
     ax.axhline(y=0, color='k', linestyle='--', linewidth=1, alpha=0.5, label='Breakeven (WC=0)')
     ax.axhline(y=NEEDED_COST, color='gray', linestyle='--', linewidth=1, alpha=0.5, label=f'Needed Cost (${NEEDED_COST})')
     ax.set_xlabel('Time (years)', fontsize=11)
@@ -160,16 +161,6 @@ def main():
     print("\n=== CELL SUMMARY STATISTICS ===")
     print(f"Cell ID: {cell_id}")
     print(f"Total radius neighbors: {metrics['total_radius_neighbors']}")
-    print(f"Final memory: {metrics['memory'][-1]:.2f} years")
-    print(f"Final severity: {metrics['severity'][-1]:.4f}")
-    print(f"Final active neighbors: {metrics['active_neighbors'][-1]}/{metrics['total_radius_neighbors']}")
-    print(f"Final willing cost: ${metrics['willing_cost'][-1]:.2f}")
-    print(f"Cell active at end: {metrics['cell_active'][-1]}")
-    print(f"\nMax memory: {max(metrics['memory']):.2f} years")
-    print(f"Max severity: {max(metrics['severity']):.4f}")
-    print(f"Max active neighbors: {max(metrics['active_neighbors'])}/{metrics['total_radius_neighbors']}")
-    print(f"Max willing cost: ${max(metrics['willing_cost']):.2f}")
-    print(f"Min willing cost: ${min(metrics['willing_cost']):.2f}")
     
     # Count activation events
     activation_count = sum(1 for i in range(1, len(metrics['cell_active'])) 

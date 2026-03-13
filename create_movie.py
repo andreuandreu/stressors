@@ -1,10 +1,12 @@
 import pickle
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.collections import PatchCollection
 import tempfile
 import os
+sys.path.append('./')
 from pathlib import Path
 from stressor_dynamics import CellDynamicsState
 from config import DURATION_YEARS
@@ -17,7 +19,7 @@ except ImportError:
     print("Warning: imageio not available. Will create frame PNGs only.")
 
 
-def load_results(filename: str = 'stressor_dynamics_results.pkl'):
+def load_results(filename: str = './data/stressor_dynamics_results.pkl'):
     """Load simulation results from pickle file."""
     with open(filename, 'rb') as f:
         results = pickle.load(f)
@@ -120,7 +122,7 @@ def create_movie(results, output_video: str = 'stressor_dynamics_movie.mp4',
         frames = []
         for t in range(nframes):
             if t % 10 == 0:
-                print(f"  Generating frame {t}/{nframes}...")
+                print(f"  Generating frame {t}/{nframes}...", temp_dir , 'xxx')
             
             frame_path = os.path.join(temp_dir, f'frame_{t:04d}.png')
             create_frame(cells, cell_states, t, nevents_history, frame_path)

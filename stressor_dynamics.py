@@ -201,21 +201,19 @@ class StressorDynamics:
                 # Avoid log of zero or negative
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
-                denominator =  np.log( 1+ memory_term * nevents_term/(self.DECAY*len(self.cell_states) ) ) + 1  # +1 to prevent log(x) < 1
+                #denominator =  memory_term/self.DECAY * ( np.log( 1+ nevents_term/(len(self.cell_states) ) ) + 1 ) # +1 to prevent log(x) < 1
+                denominator =  memory_term/self.DECAY *  np.sqrt( nevents_term/len(self.cell_states) ) + 1  # +1 to prevent log(x) < 1
                 
-                #state.willing_cost = state.exposure  * smoothed_severity * self.MAX_CAP * state.capacity  / denominator
-                state.willing_cost = state.exposure  * state.severity * self.NEEDED_COST / (denominator*MAX_CAP)  # Scale by MAX_CAP to keep costs in reasonable range
+                state.willing_cost = state.exposure  * smoothed_severity * self.NEEDED_COST / (denominator*MAX_CAP)
+                #state.willing_cost = state.exposure  * state.severity * self.NEEDED_COST / (denominator*MAX_CAP)  # Scale by MAX_CAP to keep costs in reasonable range
                 
                 recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
                 # Decision: activate if DeltaCost < 0
                 # DeltaCost = neededCost - willingCost
-                delta_cost = self.NEEDED_COST - state.willing_cost#recapacity#
+                delta_cost = self.NEEDED_COST - state.willing_cost*state.capacity#recapacity#
 
                 if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
                     print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f}, recap.={recapacity:.1f}, nev.={nevents_term/len(self.cell_states):.2f}")
-                
-
-                
                 
                 # Check social influence from neighbors
                 active_radius_neighbors = sum(
@@ -253,7 +251,7 @@ class StressorDynamics:
             
             state.active_history.append(state.cell.active)
             state.delta_cost_history.append(delta_cost)
-            state.willing_cost_history.append(state.willing_cost)
+            state.willing_cost_history.append(state.willing_cost*state.capacity)
     
     def run_simulation(self) -> dict:
         """
@@ -332,10 +330,12 @@ def main():
     for idx, state in enumerate(dynamics.cell_states[:10], start=1):  # Print first 10
         print(
             f"Cell {idx}: "
+            f"area={state.cell.area:.1f} "
             f"final_severity={state.severity:.4f} "
             f"final_memory={state.memory:.1f} "
             f"active={state.cell.active} "
             f"max_severity={max(state.severity_history) if state.severity_history else 0:.4f}"
+            
         )
 
 
