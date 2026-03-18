@@ -23,7 +23,7 @@ NEV_BETA = 0.1
 SEV_THRESHOLD = 0.22
 
 # Decay parameter for willing cost calculation
-DECAY = 1.0
+DECAY = 3.3
 
 # ============================================================================
 # Effort Dynamics Parameters

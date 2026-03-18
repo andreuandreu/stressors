@@ -202,7 +202,7 @@ class StressorDynamics:
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
                 #denominator =  memory_term/self.DECAY * ( np.log( 1+ nevents_term/(len(self.cell_states) ) ) + 1 ) # +1 to prevent log(x) < 1
-                denominator =  memory_term/self.DECAY *  np.sqrt( nevents_term/len(self.cell_states) ) + 1  # +1 to prevent log(x) < 1
+                denominator =  np.exp(memory_term/self.DECAY) *  np.sqrt( nevents_term/len(self.cell_states) ) + 1  # +1 to prevent log(x) < 1
                 
                 state.willing_cost = state.exposure  * smoothed_severity * self.NEEDED_COST / (denominator*MAX_CAP)
                 #state.willing_cost = state.exposure  * state.severity * self.NEEDED_COST / (denominator*MAX_CAP)  # Scale by MAX_CAP to keep costs in reasonable range
