@@ -30,7 +30,12 @@ def extract_single_cell_metrics(results, cell_idx: int = 12):  # 0-indexed, so 1
     memory_history = cell_state.memory_history
     severity_history = cell_state.severity_history
     willing_cost_history = cell_state.willing_cost_history
-    
+    cases_history = cell_state.num_events_history
+
+    # Compute overall average events per cell for each year
+    all_cases = np.array([state.num_events_history for state in cell_states])
+    mean_cases_history = np.mean(all_cases, axis=0) if all_cases.size > 0 else np.zeros(ntime)
+
     # Calculate number of active radius neighbors over time
     active_radius_neighbors = []
     for t in range(ntime):
@@ -53,6 +58,8 @@ def extract_single_cell_metrics(results, cell_idx: int = 12):  # 0-indexed, so 1
         'time': time_history,
         'memory': memory_history,
         'severity': severity_history,
+        'cases': cases_history,
+        'mean_cases': mean_cases_history,
         'active_neighbors': active_radius_neighbors,
         'willing_cost': willing_cost_history,
         'cell_active': cell_state.active_history,
@@ -69,6 +76,8 @@ def plot_single_cell(metrics, cell_id: int = 18):
     time = metrics['time']
     memory = metrics['memory']
     severity = metrics['severity']
+    cases = metrics['cases']
+    mean_cases = metrics['mean_cases']
     active_neighbors = metrics['active_neighbors']
     willing_cost = metrics['willing_cost']
     cell_active = metrics['cell_active']
@@ -82,14 +91,29 @@ def plot_single_cell(metrics, cell_id: int = 18):
             else:
                 ax.axvspan(t, time[i+1], alpha=0.05, color='red', zorder=0)
     
-    # Plot 1: Memory
+    # Plot 1: Cases per year versus mean events per cell
     ax = axes[0, 0]
-    ax.plot(time[YRS_THRES:], 1/np.array(memory[YRS_THRES:]), 'b-', linewidth=2, marker='o', markersize=3)
-    ax.fill_between(time[YRS_THRES:], 1/np.array(memory[YRS_THRES:]), alpha=0.3, color='blue')
+    ax.plot(time[YRS_THRES:], cases[YRS_THRES:], 'b-', linewidth=2, marker='o', markersize=3, label='Selected cell')
+    ax.plot(time[YRS_THRES:], mean_cases[YRS_THRES:], 'k--', linewidth=2, label='Mean events/cell')
+    ax.fill_between(time[YRS_THRES:], cases[YRS_THRES:], mean_cases[YRS_THRES:], alpha=0.2, color='gray')
+
+    deviation = np.array(cases) - np.array(mean_cases)
+    last_deviation = deviation[-1] if len(deviation) > 0 else 0.0
+    ax.text(
+        0.98, 0.05,
+        f'Last dev = {last_deviation:+.2f}',
+        transform=ax.transAxes,
+        ha='right',
+        va='bottom',
+        fontsize=10,
+        bbox=dict(facecolor='white', alpha=0.7, edgecolor='black', boxstyle='round')
+    )
+
     ax.set_xlabel('Time (years)', fontsize=11)
-    ax.set_ylabel('Memory (years)', fontsize=11)
-    ax.set_title('Memory - Time Since Last Severe Event', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Cases per Year', fontsize=11)
+    ax.set_title('Annual Cases vs Mean Events per Cell', fontsize=12, fontweight='bold')
     ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=10)
     
     # Plot 2: Severity
     ax = axes[0, 1]

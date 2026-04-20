@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 from generate_cells import Cell
 from config import (
     NEV_MU, NEV_BETA, SEV_THRESHOLD, DECAY,
-    NSTUBBORN, STUBORNESS, NEEDED_COST, MAX_CAP, RADIUS, DURATION_YEARS, YRS_THRES
+    NSTUBBORN, STUBORNESS, NEEDED_COST, MAX_CAP,
+    MEAN_E, STD_DEV,
+    RADIUS, DURATION_YEARS, YRS_THRES
 )
 
 
@@ -47,6 +49,8 @@ class StressorDynamics:
     STUBORNESS = STUBORNESS
     NEEDED_COST = NEEDED_COST
     MAX_CAP = MAX_CAP
+    MEAN_E = MEAN_E
+    STD_DEV = STD_DEV
     
     def __init__(self, cells: List[Cell], duration_years: int = None, radius: float = None):
         """
@@ -86,7 +90,7 @@ class StressorDynamics:
             
             # Capacity depends on cell area (as proxy for cellSize)
             cell_size = cell.area if cell.area > 0 else 1
-            state.capacity = np.random.uniform( self.MAX_CAP, 1) * np.sqrt(cell_size)
+            state.capacity = np.random.uniform(0.01, self.MAX_CAP) * np.sqrt(cell_size)
             
             self.cell_states.append(state)
     
@@ -105,16 +109,41 @@ class StressorDynamics:
     def distribute_events(self, nevents: float):
         """
         Distribute randomly the total number of events across cells,
-        ensuring sum equals nevents and each cell gets [0, nevents].
+        reducing counts for cells with active neighbors within the radius.
+        Each cell draws an efficacy value from a normal distribution and
+        active cells in the local radius reduce average event allocation.
         """
         if nevents == 0:
             for state in self.cell_states:
                 state.num_events = 0.0
             return
-        
-        # Use Dirichlet distribution to randomly distribute events
-        # This ensures: sum = nevents, each cell gets portion of total
-        portions = np.random.dirichlet(np.ones(self.ncells))
+
+        # Draw efficacy values per cell and clip to [0, 1]
+        efficacies = np.random.normal(self.MEAN_E, self.STD_DEV, size=self.ncells)
+        efficacies = np.clip(efficacies, 0.0, 1.0)
+
+        # Compute weights: active cells yield fewer events, while inactive
+        # cells receive a relative boost when nearby activity reduces event load.
+        weights = []
+        for state, efficacy in zip(self.cell_states, efficacies):
+            active_neighbors = sum(1 for n in state.cell.radius_neighbours if n.active)
+            total_neighbors = len(state.cell.radius_neighbours) + 1  # include self
+            active_within_radius = active_neighbors + (1 if state.cell.active else 0)
+            active_fraction = active_within_radius / total_neighbors if total_neighbors > 0 else 0.0
+
+            if state.cell.active:
+                # Active cells reduce their event load based on efficacy
+                adjustment = 1.0 - efficacy * active_fraction
+            else:
+                # Inactive cells pick up more events when active neighbors suppress theirs
+                adjustment = 1.0 + efficacy * active_fraction
+
+            adjustment = max(adjustment, 0.01)
+            weight = max(state.cell.area, 1) * adjustment
+            weights.append(weight)
+
+        # Use Dirichlet distribution with area-based weights
+        portions = np.random.dirichlet(np.array(weights))
         for state, portion in zip(self.cell_states, portions):
             state.num_events = portion * nevents
     
@@ -141,16 +170,17 @@ class StressorDynamics:
             if state.num_events > 0:
                 # Severity is sampled from Gumbel distribution
                 severity_sample = np.abs(np.random.gumbel(self.NEV_MU, self.NEV_BETA))
-                # Update only if severity exceeds threshold
+                # Reset memory if the event is severe enough, but keep the existing severity value
                 if severity_sample > self.SEV_THRESHOLD:
-                    state.severity = severity_sample
                     state.memory = 0.0  # Reset memory (just had severe event)
-                # else: keep previous severity
+                # else: keep previous severity and memory continues to age
             
             # Increment memory (years since last severe event)
             state.memory += 1.0
             
             # Store history
+            if severity_sample > state.severity_history[-1] if state.severity_history else 0.0:
+                state.severity = severity_sample
             state.severity_history.append(state.severity)
             state.memory_history.append(state.memory)
             state.num_events_history.append(state.num_events)
@@ -202,18 +232,19 @@ class StressorDynamics:
                 memory_term = max(state.memory, 0.1)  # Prevent zero
                 nevents_term = max(nevents, 1.0)  # Prevent zero
                 #denominator =  memory_term/self.DECAY * ( np.log( 1+ nevents_term/(len(self.cell_states) ) ) + 1 ) # +1 to prevent log(x) < 1
-                denominator =  np.exp(memory_term/self.DECAY) *  np.sqrt( nevents_term/len(self.cell_states) ) + 1  # +1 to prevent log(x) < 1
+                denominator =  np.exp(memory_term/self.DECAY)  #*  np.sqrt( nevents_term/len(self.cell_states) )   # +1 to prevent log(x) < 1
                 
-                state.willing_cost = state.exposure  * smoothed_severity * self.NEEDED_COST / (denominator*MAX_CAP)
-                #state.willing_cost = state.exposure  * state.severity * self.NEEDED_COST / (denominator*MAX_CAP)  # Scale by MAX_CAP to keep costs in reasonable range
+                state.willing_cost = state.exposure  * smoothed_severity * MAX_CAP / (denominator)
                 
-                recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
+                if state.willing_cost > state.capacity :
+                    state.willing_cost = state.capacity  # Cap willing cost by capacity
+                #recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
                 # Decision: activate if DeltaCost < 0
                 # DeltaCost = neededCost - willingCost
-                delta_cost = self.NEEDED_COST - state.willing_cost*state.capacity#recapacity#
+                delta_cost = 1 - state.willing_cost
 
                 if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
-                    print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f}, recap.={recapacity:.1f}, nev.={nevents_term/len(self.cell_states):.2f}")
+                    print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f},  nev.={nevents_term/len(self.cell_states):.2f}")
                 
                 # Check social influence from neighbors
                 active_radius_neighbors = sum(
@@ -251,7 +282,7 @@ class StressorDynamics:
             
             state.active_history.append(state.cell.active)
             state.delta_cost_history.append(delta_cost)
-            state.willing_cost_history.append(state.willing_cost*state.capacity)
+            state.willing_cost_history.append(state.willing_cost*NEEDED_COST)
     
     def run_simulation(self) -> dict:
         """
@@ -332,7 +363,7 @@ def main():
             f"Cell {idx}: "
             f"area={state.cell.area:.1f} "
             f"final_severity={state.severity:.4f} "
-            f"final_memory={state.memory:.1f} "
+            f"capacity={state.capacity:.1f} "
             f"active={state.cell.active} "
             f"max_severity={max(state.severity_history) if state.severity_history else 0:.4f}"
             
