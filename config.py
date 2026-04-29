@@ -23,7 +23,7 @@ NEV_BETA = 0.1
 SEV_THRESHOLD = 0.22
 
 # Decay parameter for willing cost calculation
-DECAY = 3.3
+DECAY = 8.3
 
 # ============================================================================
 # Effort Dynamics Parameters
@@ -38,14 +38,20 @@ STUBORNESS = 0.9
 NEEDED_COST = 500.0
 
 # Scaling factor for capacity distribution
-MAX_CAP = 3
+MAX_CAP = 30
 
 # Efficacy parameters for event redistribution
 MEAN_E = 0.3
 STD_DEV = 0.1
 
 # Consecutive years threshold for deactivation (if DeltaCost > 0 for this many years, deactivate)
-YRS_THRES = 3
+YRS_THRES = 1
+
+# Media influence factor for adoption probability
+MEDIA = 80
+
+# Percentage saving in cost for adopting cell (used in DeltaCost calculation)
+PRC_SAVING = 0.01
 
 # ============================================================================
 # Simulation Parameters

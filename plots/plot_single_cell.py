@@ -64,14 +64,16 @@ def extract_single_cell_metrics(results, cell_idx: int = 12):  # 0-indexed, so 1
         'willing_cost': willing_cost_history,
         'cell_active': cell_state.active_history,
         'total_radius_neighbors': len(cell.radius_neighbours),
-        'cell_area': cell.area
+        'cell_area': cell.area,
+        'stubborn': cell_state.stubborn
     }
 
 
 def plot_single_cell(metrics, cell_id: int = 18):
     """Create 2x2 subplot figure for single cell dynamics."""
+    stubborn_status = " (STUBBORN - never activates)" if metrics['stubborn'] else ""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle(f'Cell {cell_id} (Neighbours: {metrics["total_radius_neighbors"]}, area: {metrics["cell_area"]}px)', fontsize=16, fontweight='bold')
+    fig.suptitle(f'Cell {cell_id} (Neighbours: {metrics["total_radius_neighbors"]}, area: {metrics["cell_area"]}px){stubborn_status}', fontsize=16, fontweight='bold')
     
     time = metrics['time']
     memory = metrics['memory']
@@ -184,6 +186,7 @@ def main():
     # Print summary statistics
     print("\n=== CELL SUMMARY STATISTICS ===")
     print(f"Cell ID: {cell_id}")
+    print(f"Stubborn cell (never activates): {metrics['stubborn']}")
     print(f"Total radius neighbors: {metrics['total_radius_neighbors']}")
     
     # Count activation events

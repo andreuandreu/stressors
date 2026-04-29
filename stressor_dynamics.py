@@ -7,7 +7,8 @@ from config import (
     NEV_MU, NEV_BETA, SEV_THRESHOLD, DECAY,
     NSTUBBORN, STUBORNESS, NEEDED_COST, MAX_CAP,
     MEAN_E, STD_DEV,
-    RADIUS, DURATION_YEARS, YRS_THRES
+    RADIUS, DURATION_YEARS, YRS_THRES, MEDIA,
+    PRC_SAVING
 )
 
 
@@ -239,9 +240,7 @@ class StressorDynamics:
                 if state.willing_cost > state.capacity :
                     state.willing_cost = state.capacity  # Cap willing cost by capacity
                 #recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
-                # Decision: activate if DeltaCost < 0
-                # DeltaCost = neededCost - willingCost
-                delta_cost = 1 - state.willing_cost
+
 
                 if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
                     print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f},  nev.={nevents_term/len(self.cell_states):.2f}")
@@ -257,6 +256,10 @@ class StressorDynamics:
                     neighbor_fraction = active_radius_neighbors / total_radius_neighbors
                 else:
                     neighbor_fraction = 0
+
+                # Decision: activate if DeltaCost < 0
+                # DeltaCost = neededCost - willingCost
+                delta_cost = 1 - state.willing_cost - PRC_SAVING * neighbor_fraction
                 
                 # Adoption probability with social influence
                 # p_adoption = stuborness * rand(0,1) > neighbor_fraction
@@ -264,7 +267,7 @@ class StressorDynamics:
                 adoption_prob = self.STUBORNESS * rand_val
                 
                 # If delta_cost < 0 AND adoption condition met, activate
-                if delta_cost < 0 and adoption_prob > neighbor_fraction:
+                if delta_cost < 0 and adoption_prob*MEDIA > neighbor_fraction:
                     state.cell.active = True
                     state.consecutive_positive_delta_cost_years = 0  # Reset counter on activation
                 
