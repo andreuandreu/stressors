@@ -242,8 +242,8 @@ class StressorDynamics:
                 #recapacity = np.random.uniform(state.capacity * self.NEEDED_COST, state.willing_cost )
 
 
-                if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
-                    print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f},  nev.={nevents_term/len(self.cell_states):.2f}")
+                #if  self.cell_states.index(state) == 12:  # Debug for cell 13 (index 12)
+                #    print(f"Yr {t}: Cell13- sev. {state.severity:.1f}, smth_sev.={smoothed_severity:.1f}, den.={denominator:.1f}, will_c={state.willing_cost:.2f},  nev.={nevents_term/len(self.cell_states):.2f}")
                 
                 # Check social influence from neighbors
                 active_radius_neighbors = sum(
@@ -294,8 +294,8 @@ class StressorDynamics:
         Returns:
             Dictionary containing simulation results and histories
         """
-        print(f"Starting stressor dynamics simulation for {self.duration_years} years")
-        print(f"Number of cells: {self.ncells}\n")
+        #print(f"Starting stressor dynamics simulation for {self.duration_years} years")
+        #print(f"Number of cells: {self.ncells}\n")
         
         for t in range(self.duration_years + 1):
             self.time = t
@@ -311,9 +311,9 @@ class StressorDynamics:
             if t % 10 == 0:
                 nevents = self.nevents_history[-1]
                 active_count = sum(1 for c in self.cells if c.active)
-                print(f"Year {t}: Nevents={nevents:.2f}, Active cells={active_count}/{self.ncells}")
+                #print(f"Year {t}: Nevents={nevents:.2f}, Active cells={active_count}/{self.ncells}")
         
-        print(f"\nSimulation complete!")
+        #print(f"\nSimulation complete!")
         
         results = {
             'time_history': self.time_history,
@@ -335,17 +335,17 @@ class StressorDynamics:
         
         with open(filename, 'wb') as f:
             pickle.dump(results, f)
-        print(f"Results saved to {filename}")
+        #print(f"Results saved to {filename}")
 
 
 def main():
     """Main entry point: load cells and run stressor dynamics simulation."""
     # Load cells from file
-    print("Loading cells from cells_state.pkl...")
+    #print("Loading cells from cells_state.pkl...")
     with open('./data/cells_state.pkl', 'rb') as f:
         cells = pickle.load(f)
     
-    print(f"Loaded {len(cells)} cells\n")
+    #print(f"Loaded {len(cells)} cells\n")
     
     # Create and run simulation
     dynamics = StressorDynamics(cells, duration_years=DURATION_YEARS, radius=RADIUS)
@@ -355,10 +355,11 @@ def main():
     dynamics.save_results('./data/stressor_dynamics_results.pkl')
     
     # Print summary statistics
-    print("\n=== SUMMARY STATISTICS ===")
-    print(f"Final Nevents: {dynamics.nevents_history[-1]:.2f}")
-    print(f"Final active cells: {sum(1 for c in cells if c.active)}/{len(cells)}")
+    #print("\n=== SUMMARY STATISTICS ===")
+    #print(f"Final Nevents: {dynamics.nevents_history[-1]:.2f}")
+    #print(f"Final active cells: {sum(1 for c in cells if c.active)}/{len(cells)}")
     
+    '''
     # Print per-cell statistics
     print("\n=== PER-CELL STATISTICS ===")
     for idx, state in enumerate(dynamics.cell_states[:10], start=1):  # Print first 10
@@ -371,7 +372,7 @@ def main():
             f"max_severity={max(state.severity_history) if state.severity_history else 0:.4f}"
             
         )
-
+    '''
 
 if __name__ == "__main__":
     main()

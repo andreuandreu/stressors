@@ -2,6 +2,7 @@
 Configuration file for stressor dynamics simulation.
 Centralized parameters for cell generation and dynamics simulation.
 """
+import numpy as np
 
 # ============================================================================
 # Cell Generation Parameters
@@ -48,10 +49,16 @@ STD_DEV = 0.1
 YRS_THRES = 1
 
 # Media influence factor for adoption probability
-MEDIA = 80
+MEDIA = 16
 
 # Percentage saving in cost for adopting cell (used in DeltaCost calculation)
-PRC_SAVING = 0.01
+PRC_SAVING = 0.8
+
+# Parameter sweep ranges for grid experiments
+MEAN_E_RANGE = [0.3]#[0.1, 0.2, 0.3, 0.4]
+STD_DEV_RANGE = [0.1] #[0.05, 0.1, 0.15, 0.2]
+MEDIA_RANGE = np.linspace(1, 51, 11)  # [40, 60, 80, 100]
+PRC_SAVING_RANGE =np.linspace(0.1, 0.8, 11)  # [0.0, 0.01, 0.02, 0.03]
 
 # ============================================================================
 # Simulation Parameters
