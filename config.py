@@ -24,7 +24,7 @@ NEV_BETA = 0.1
 SEV_THRESHOLD = 0.22
 
 # Decay parameter for willing cost calculation
-DECAY = 8.3
+DECAY = 3.3
 
 # ============================================================================
 # Effort Dynamics Parameters
@@ -49,10 +49,10 @@ STD_DEV = 0.1
 YRS_THRES = 1
 
 # Media influence factor for adoption probability
-MEDIA = 16
+MEDIA = 1
 
 # Percentage saving in cost for adopting cell (used in DeltaCost calculation)
-PRC_SAVING = 0.8
+PRC_SAVING = 0.1
 
 # Parameter sweep ranges for grid experiments
 MEAN_E_RANGE = [0.3]#[0.1, 0.2, 0.3, 0.4]
