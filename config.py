@@ -30,7 +30,7 @@ DECAY = 3.3
 # Effort Dynamics Parameters
 # ============================================================================
 # Fraction of cells that are stubborn (never adopt)
-NSTUBBORN = 0.1
+NSTUBBORN = 0.0
 
 # Base stubbornness parameter for adoption probability
 STUBORNESS = 0.9
@@ -49,7 +49,7 @@ STD_DEV = 0.1
 YRS_THRES = 1
 
 # Media influence factor for adoption probability
-MEDIA = 1
+MESSAGING = 1
 
 # Percentage saving in cost for adopting cell (used in DeltaCost calculation)
 PRC_SAVING = 0.1
@@ -57,9 +57,9 @@ PRC_SAVING = 0.1
 # Parameter sweep ranges for grid experiments
 MEAN_E_RANGE = [0.3]#[0.1, 0.2, 0.3, 0.4]
 STD_DEV_RANGE = [0.1] #[0.05, 0.1, 0.15, 0.2]
-MEDIA_RANGE = np.linspace(1, 51, 11)  # [40, 60, 80, 100]
+MESSAGING_RANGE = np.linspace(1, 51, 11)  # [40, 60, 80, 100]
 PRC_SAVING_RANGE =np.linspace(0.1, 0.8, 11)  # [0.0, 0.01, 0.02, 0.03]
-
+SEV_THRESHOLD_RANGE =np.linspace(0.01, 0.9, 11) 
 # ============================================================================
 # Simulation Parameters
 # ============================================================================

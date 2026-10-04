@@ -7,7 +7,7 @@ from config import (
     NEV_MU, NEV_BETA, SEV_THRESHOLD, DECAY,
     NSTUBBORN, STUBORNESS, NEEDED_COST, MAX_CAP,
     MEAN_E, STD_DEV,
-    RADIUS, DURATION_YEARS, YRS_THRES, MEDIA,
+    RADIUS, DURATION_YEARS, YRS_THRES, MESSAGING,
     PRC_SAVING
 )
 
@@ -267,7 +267,7 @@ class StressorDynamics:
                 adoption_prob = self.STUBORNESS * rand_val
                 
                 # If delta_cost < 0 AND adoption condition met, activate
-                if delta_cost < 0 and adoption_prob*MEDIA > neighbor_fraction:
+                if delta_cost < 0 and adoption_prob*MESSAGING > neighbor_fraction:
                     state.cell.active = True
                     state.consecutive_positive_delta_cost_years = 0  # Reset counter on activation
                 

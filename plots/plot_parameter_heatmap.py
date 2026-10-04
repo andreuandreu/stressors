@@ -28,6 +28,8 @@ def plot_heatmap(data, output_path: Path):
         ax.set_yticklabels([f"{v:.3g}" for v in x_values])
         ax.set_xlabel(data["param_y"].replace("_", " "))
         ax.set_ylabel(data["param_x"].replace("_", " "))
+        #ax.set_ylabel('MESSAGING')
+        
         ax.grid(False)
         return c
 

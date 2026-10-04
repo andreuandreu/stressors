@@ -1,0 +1,27 @@
+
+
+PDECAY
+python plots/plot_sims_comparisons.py \
+--both \
+data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl \
+data/HL_analy_cost0.35_pdecay0.44_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl \ 
+data/HL_analy_cost0.35_pdecay0.11_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl \
+data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/HL_dynam_cost0.35_pdecay0.44_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/HL_dynam_cost0.35_pdecay0.11_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+HRATE
+python plots/plot_sims_comparisons.py
+--both 
+data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.006_Ltimes4_agents250_networksmall_world.pkl 
+data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl
+data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.024_Ltimes4_agents250_networksmall_world.pkl 
+data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.006_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl 
+data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.024_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+FIDUTIAL
+python plots/plot_sims_comparisons.py
+--both \
+data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl \
+data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl

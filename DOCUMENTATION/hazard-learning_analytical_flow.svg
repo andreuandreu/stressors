@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="864.39447"
+   height="1329.0366"
+   viewBox="0 0 864.39447 1329.0366"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg300"
+   sodipodi:docname="hazard-learning_analytical_flow.svg"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   inkscape:export-filename="hazard-learning_analytical_flow.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview302"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="1.4021179"
+     inkscape:cx="458.23536"
+     inkscape:cy="1147.1931"
+     inkscape:window-width="1440"
+     inkscape:window-height="771"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg300" />
+  <title
+     id="title">Flow diagram of the analytical hazard-learning model</title>
+  <desc
+     id="desc">Monthly deterministic network mean-field model showing initialization, expected hazard impact, severity memory, neighbor exposure, learning and forgetting, practice use, history recording, and simulation termination.</desc>
+  <defs
+     id="defs140">
+    <marker
+       id="arrow"
+       markerWidth="10"
+       markerHeight="10"
+       refX="8"
+       refY="5"
+       orient="auto"
+       markerUnits="strokeWidth"
+       viewBox="0 0 10 10">
+      <path
+         d="M 0,0 10,5 0,10 Z"
+         fill="#36454f"
+         id="path134" />
+    </marker>
+    <filter
+       id="shadow"
+       x="-0.0016666667"
+       y="-0.0095238099"
+       width="1.0033333"
+       height="1.0190476">
+      <feDropShadow
+         dx="0"
+         dy="2"
+         stdDeviation="2"
+         flood-color="#20303a"
+         flood-opacity="0.16" />
+    </filter>
+    <style
+       id="style138">
+      .title { font: 700 30px Georgia, serif; fill: #20303a; }
+      .subtitle { font: 16px Georgia, serif; fill: #53636d; }
+      .label { font: 600 17px Georgia, serif; fill: #20303a; }
+      .small { font: 15px Georgia, serif; fill: #36454f; }
+      .tiny { font: 13px Georgia, serif; fill: #53636d; }
+      .branch { font: 700 14px Georgia, serif; fill: #53636d; }
+      .action { fill: #e8f0f2; stroke: #486a78; stroke-width: 2; }
+      .environment { fill: #e9f1e5; stroke: #64815d; stroke-width: 2; }
+      .memory { fill: #f1e9d8; stroke: #92764a; stroke-width: 2; }
+      .gate { fill: #f7f1df; stroke: #806b35; stroke-width: 2; }
+      .output { fill: #f2e4e4; stroke: #956363; stroke-width: 2; }
+      .note { fill: #fbfaf6; stroke: #b4b0a5; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .connector { fill: none; stroke: #36454f; stroke-width: 2.5; marker-end: url(#arrow); }
+      .feedback { fill: none; stroke: #64815d; stroke-width: 2.5; stroke-dasharray: 8 5; marker-end: url(#arrow); }
+      .loop { fill: none; stroke: #92764a; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect
+     width="864.39447"
+     height="1329.0366"
+     fill="#fbfaf6"
+     id="rect142"
+     x="0"
+     y="0"
+     style="fill:#ffffff;fill-opacity:1;stroke-width:0.783377" />
+  <text
+     x="462.1637"
+     y="41.78466"
+     text-anchor="middle"
+     class="title"
+     id="text144"
+     style="font-style:normal;font-variant:normal;font-weight:700;font-stretch:normal;font-size:30px;line-height:normal;font-family:Georgia, serif">Analytical hazard-learning dynamics</text>
+  <text
+     x="462.1637"
+     y="65.78466"
+     text-anchor="middle"
+     class="subtitle"
+     id="text146"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;line-height:normal;font-family:Georgia, serif">Deterministic network mean-field approximation • monthly time steps</text>
+  <!-- Initialization -->
+  <text
+     x="462.1637"
+     y="112.78466"
+     text-anchor="middle"
+     class="label"
+     id="text150"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">1. Initialize model</text>
+  <text
+     x="462.1637"
+     y="137.78467"
+     text-anchor="middle"
+     class="small"
+     id="text152"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Read N, duration, network type, seed, and parameter overrides</text>
+  <text
+     x="462.1637"
+     y="161.78467"
+     text-anchor="middle"
+     class="small"
+     id="text154"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Build social graph G = (V, E); set Sᵢ = Lᵢ = Uᵢ =0</text>
+  <path
+     d="m 462.1637,174.78466 v 40"
+     class="connector"
+     id="path156" />
+  <!-- Expected severity -->
+  <text
+     x="462.1637"
+     y="234.78467"
+     text-anchor="middle"
+     class="label"
+     id="text160"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">2. Compute expected event severity</text>
+  <text
+     x="462.1637"
+     y="263.78467"
+     text-anchor="middle"
+     class="small"
+     id="text162"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">X ~ Gumbel(μ, β), S = |X|</text>
+  <text
+     x="462.1637"
+     y="289.78467"
+     text-anchor="middle"
+     class="small"
+     id="text166"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">S̄ = ∫ |x| p<tspan
+   baseline-shift="sub"
+   font-size="12px"
+   id="tspan164">X</tspan>(x) dx</text>
+  <text
+     x="462.1637"
+     y="315.78467"
+     text-anchor="middle"
+     class="tiny"
+     id="text168"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">Numerical trapezoidal integration over μ ± 12β</text>
+  <path
+     d="m 462.1637,328.78466 v 40"
+     class="connector"
+     id="path170" />
+  <!-- Monthly loop entry -->
+  <text
+     x="462.1637"
+     y="398.78467"
+     text-anchor="middle"
+     class="label"
+     id="text174"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">3. Start month t</text>
+  <text
+     x="462.1637"
+     y="425.78467"
+     text-anchor="middle"
+     class="small"
+     id="text176"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">For t = 0, 1, …,T</text>
+  <text
+     x="462.1637"
+     y="448.78467"
+     text-anchor="middle"
+     class="tiny"
+     id="text178"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">All updates below occur once per month</text>
+  <path
+     d="m 462.1637,464.78466 v 37"
+     class="connector"
+     id="path180" />
+  <!-- Hazard forcing -->
+  <text
+     x="462.1637"
+     y="525.78467"
+     text-anchor="middle"
+     class="label"
+     id="text184"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">4. Increase hazard forcing</text>
+  <text
+     x="462.1637"
+     y="554.78467"
+     text-anchor="middle"
+     class="small"
+     id="text186"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">h(t) = h<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan1539">₀</tspan> exp(h · t)</text>
+  <text
+     x="462.1637"
+     y="582.78467"
+     text-anchor="middle"
+     class="small"
+     id="text188"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">I(t) = h(t) · S̄  (expected impact per agent)</text>
+  <path
+     d="m 462.1637,597.78466 v 38"
+     class="connector"
+     id="path190" />
+  <!-- Memory -->
+  <text
+     x="462.1637"
+     y="665.78467"
+     text-anchor="middle"
+     class="label"
+     id="text194"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">5. Update severity memory</text>
+  <text
+     x="462.1637"
+     y="688.78467"
+     text-anchor="middle"
+     class="small"
+     id="text198"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Sᵢ(t+1) = d<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan1747">s</tspan>Sᵢ(t) + I(t)</text>
+  <path
+     d="m 462.1637,699.78466 v 38"
+     class="connector"
+     id="path200" />
+  <!-- Exposure -->
+  <text
+     x="462.1637"
+     y="763.78467"
+     text-anchor="middle"
+     class="label"
+     id="text204"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">6. Calculate social exposure</text>
+  <text
+     x="462.1637"
+     y="793.78467"
+     text-anchor="middle"
+     class="small"
+     id="text208"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Pᵢ(t) = 1 − ∏<tspan
+   baseline-shift="sub"
+   font-size="12px"
+   id="tspan206">j∈Nᵢ</tspan> (1 − Uⱼ(t))</text>
+  <text
+     x="462.1637"
+     y="821.78467"
+     text-anchor="middle"
+     class="small"
+     id="text210"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Probability that agent i sees at least one practicing neighbor</text>
+  <text
+     x="462.1637"
+     y="845.78467"
+     text-anchor="middle"
+     class="tiny"
+     id="text212"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">Pᵢ = 0 when Nᵢ is empty</text>
+  <path
+     d="m 462.1637,857.78466 v 38"
+     class="connector"
+     id="path214" />
+  <!-- Learning -->
+  <text
+     x="462.1637"
+     y="925.78467"
+     text-anchor="middle"
+     class="label"
+     id="text218"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">7. Learn or forget the practice</text>
+  <text
+     x="462.1637"
+     y="955.78467"
+     text-anchor="middle"
+     class="small"
+     id="text220"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">L⁺ᵢ = min(L<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan1537">t</tspan>, Lᵢ + 1)</text>
+  <text
+     x="462.1637"
+     y="982.78467"
+     text-anchor="middle"
+     class="small"
+     id="text222"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">L⁻ᵢ = exp(−d<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan1541">p</tspan>) · Lᵢ</text>
+  <text
+     x="462.1637"
+     y="1009.7847"
+     text-anchor="middle"
+     class="small"
+     id="text224"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Lᵢ(t+1) = Pᵢ L⁺ᵢ + (1 − Pᵢ)L⁻ᵢ</text>
+  <path
+     d="m 462.1637,1033.7847 v 38"
+     class="connector"
+     id="path226" />
+  <!-- Use -->
+  <text
+     x="462.1637"
+     y="1101.7847"
+     text-anchor="middle"
+     class="label"
+     id="text230"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">8. Determine expected practice use</text>
+  <text
+     x="462.1637"
+     y="1131.7847"
+     text-anchor="middle"
+     class="small"
+     id="text232"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Kᵢ = min(1, Lᵢ / L<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan1543">t</tspan>)</text>
+  <text
+     x="462.1637"
+     y="1158.7847"
+     text-anchor="middle"
+     class="small"
+     id="text236"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Rᵢ = 1 − exp[−Mᵢ / (M₀ · (1 − Ū<tspan
+   baseline-shift="sub"
+   font-size="12px"
+   id="tspan234">previous</tspan>))]</text>
+  <text
+     x="462.1637"
+     y="1185.7847"
+     text-anchor="middle"
+     class="small"
+     id="text238"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">Uᵢ = clip[ 1(Kᵢ &gt; (L−1)/L) · Rᵢ · exp(−cost / sensitivity), 0, 1 ]</text>
+  <text
+     x="462.1637"
+     y="1207.7847"
+     text-anchor="middle"
+     class="tiny"
+     id="text240"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">The analytical model stores probabilities, not Boolean decisions</text>
+  <!-- Feedback to exposure -->
+  <path
+     d="m 666.1637,1163.7847 c 180,0 180,-348.00004 2,-348.00004"
+     class="feedback"
+     id="path242" />
+  <text
+     x="706.76819"
+     y="994.60052"
+     text-anchor="middle"
+     class="branch"
+     transform="rotate(-0.20231379)"
+     id="text244"
+     style="font-style:normal;font-variant:normal;font-weight:700;font-stretch:normal;font-size:14px;line-height:normal;font-family:Georgia, serif"><tspan
+       sodipodi:role="line"
+       id="tspan1664"
+       x="706.76819"
+       y="994.60052">U(t) drives next month’s</tspan><tspan
+       sodipodi:role="line"
+       id="tspan1666"
+       x="706.76819"
+       y="1012.1005">neighbor exposure</tspan></text>
+  <path
+     d="m 462.1637,1215.7847 v 36"
+     class="connector"
+     id="path246" />
+  <!-- Outputs -->
+  <text
+     x="462.1637"
+     y="1269.7847"
+     text-anchor="middle"
+     class="label"
+     id="text250"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">9. Record monthly histories</text>
+  <text
+     x="462.1637"
+     y="1298.7847"
+     text-anchor="middle"
+     class="small"
+     id="text252"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">frequency, expected events, mean memory, mean knowledge</text>
+  <text
+     x="462.1637"
+     y="1325.7847"
+     text-anchor="middle"
+     class="small"
+     id="text254"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:normal;font-family:Georgia, serif">known fraction, practice-use fraction</text>
+  <!-- Month loop -->
+  <path
+     d="m 254.20815,1306.2019 c -145.24943,0 -145.24943,-881.89278 48.08257,-896.93574"
+     class="loop"
+     id="path256" />
+  <text
+     x="126.85738"
+     y="882.88953"
+     text-anchor="middle"
+     class="branch"
+     transform="rotate(0.293253)"
+     id="text258"
+     style="font-style:normal;font-variant:normal;font-weight:700;font-stretch:normal;font-size:14px;line-height:normal;font-family:Georgia, serif"><tspan
+       sodipodi:role="line"
+       id="tspan1668"
+       x="126.85738"
+       y="882.88953">next</tspan><tspan
+       sodipodi:role="line"
+       id="tspan1670"
+       x="126.85738"
+       y="900.38953">month</tspan></text>
+  <!-- Notes -->
+  <rect
+     x="16.164141"
+     y="165.7851"
+     width="262.32724"
+     height="155.23915"
+     rx="10"
+     class="note"
+     id="rect260"
+     ry="10" />
+  <text
+     x="36.163696"
+     y="195.78467"
+     class="label"
+     id="text262"
+     style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:17px;line-height:normal;font-family:Georgia, serif">Analytical approximation</text>
+  <text
+     x="36.163696"
+     y="223.78467"
+     class="tiny"
+     id="text264"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">Random event counts and</text>
+  <text
+     x="36.163696"
+     y="238.78467"
+     class="tiny"
+     id="text266"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif"><tspan
+       sodipodi:role="line"
+       id="tspan1460"
+       x="36.163696"
+       y="238.78467">decisions arereplaced by</tspan><tspan
+       sodipodi:role="line"
+       id="tspan1462"
+       x="36.163696"
+       y="255.03467">expected values.</tspan></text>
+  <text
+     x="36.163696"
+     y="265.78467"
+     class="tiny"
+     id="text268"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif" />
+  <text
+     x="36.163696"
+     y="280.78467"
+     class="tiny"
+     id="text270"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">Individual agent states</text>
+  <text
+     x="36.163696"
+     y="295.78467"
+     class="tiny"
+     id="text272"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13px;line-height:normal;font-family:Georgia, serif">remain network indexed.</text>
+  <metadata
+     id="metadata427">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>Flow diagram of the analytical hazard-learning model</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>

@@ -14,12 +14,14 @@ import stressor_dynamics as sd_module
 from config import (
     MEAN_E,
     STD_DEV,
-    MEDIA,
+    MESSAGING,
     PRC_SAVING,
     MEAN_E_RANGE,
+    SEV_THRESHOLD,
     STD_DEV_RANGE,
-    MEDIA_RANGE,
+    MESSAGING_RANGE,
     PRC_SAVING_RANGE,
+    SEV_THRESHOLD_RANGE,
     DURATION_YEARS,
     RADIUS,
 )
@@ -44,10 +46,11 @@ def load_cells(cell_file: Path):
 
 def get_pair_ranges():
     return {
-        "MEAN_E": np.array(MEAN_E_RANGE, dtype=float),
-        "STD_DEV": np.array(STD_DEV_RANGE, dtype=float),
-        "MEDIA": np.array(MEDIA_RANGE, dtype=float),
+        #"MEAN_E": np.array(MEAN_E_RANGE, dtype=float),
+        #"STD_DEV": np.array(STD_DEV_RANGE, dtype=float),
+        #"MESSAGING": np.array(MESSAGING_RANGE, dtype=float),
         "PRC_SAVING": np.array(PRC_SAVING_RANGE, dtype=float),
+        "SEV_THRESHOLD": np.array(SEV_THRESHOLD_RANGE, dtype=float),
     }
 
 
@@ -55,8 +58,9 @@ def get_fiducial_values():
     return {
         "MEAN_E": MEAN_E,
         "STD_DEV": STD_DEV,
-        "MEDIA": MEDIA,
+        "MESSAGING": MESSAGING,
         "PRC_SAVING": PRC_SAVING,
+        "SEV_THRESHOLD": SEV_THRESHOLD,
     }
 
 
@@ -98,8 +102,9 @@ def run_grid(cell_file: Path, output_dir: Path, seed: int = 123):
                     seed=seed + ix * len(y_values) + iy,
                     mean_e=params["MEAN_E"],
                     std_dev=params["STD_DEV"],
-                    media=params["MEDIA"],
+                    media=params["MESSAGING"],
                     prc_saving=params["PRC_SAVING"],
+                    sev_threshold=params["SEV_THRESHOLD"],
                 )
 
                 avg_matrix[ix, iy] = mean_val

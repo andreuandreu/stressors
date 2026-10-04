@@ -53,6 +53,7 @@ def compute_replicate_stats(
     std_dev=None,
     media=None,
     prc_saving=None,
+    sev_threshold=None,
 ):
     values = []
 
@@ -60,8 +61,8 @@ def compute_replicate_stats(
         run_seed = seed + i
         np.random.seed(run_seed)
 
-        if media is not None:
-            sd_module.MEDIA = media
+        if sev_threshold is not None:
+            sd_module.SEV_THRESHOLD = sev_threshold
         if prc_saving is not None:
             sd_module.PRC_SAVING = prc_saving
 
