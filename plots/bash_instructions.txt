@@ -25,3 +25,29 @@ python plots/plot_sims_comparisons.py
 --both \
 data/HL_analy_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_networksmall_world.pkl \
 data/HL_dynam_cost0.35_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+
+SWEEP COSTS
+python plots/plot_parameter_sweeps.py \
+data/1parameter_sweep/HL_analy_costPRACTICE_COST-RAN-0.01-1.01_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/1parameter_sweep/HL_dynam_costPRACTICE_COST-RAN-0.01-1.01_pdecay0.04_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+SWEEP SEVERITY DECAY
+python plots/plot_parameter_sweeps.py \
+data/1parameter_sweep/HL_analy_cost0.3_pdecay0.04_sdecaySEVERITY_DECAY-RAN-0.01-1.01_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/1parameter_sweep/HL_dynam_cost0.3_pdecay0.04_sdecaySEVERITY_DECAY-RAN-0.01-1.01_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+SWEEP PRACTICE DECAY
+python plots/plot_parameter_sweeps.py \
+data/1parameter_sweep/HL_analy_cost0.3_pdecayPRACTICE_DECAY-RAN-0.01-1.01_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/1parameter_sweep/HL_dynam_cost0.3_pdecayPRACTICE_DECAY-RAN-0.01-1.01_sdecay0.025_hrate0.012_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+SWEEP HAZARD_RATE
+python plots/plot_parameter_sweeps.py \
+data/1parameter_sweep/HL_analy_cost0.3_pdecay0.04_sdecay0.025_hrateHAZARD_RATE-RAN-0.001-0.049_Ltimes4_agents250_Nneigh24_networksmall_world.pkl \
+data/1parameter_sweep/HL_dynam_cost0.3_pdecay0.04_sdecay0.025_hrateHAZARD_RATE-RAN-0.001-0.049_Ltimes4_agents250_Nneigh24_networksmall_world.pkl
+
+SWEEP LEARNING TIMES
+python plots/plot_parameter_sweeps.py \
+data/1parameter_sweep/HL_analy_cost0.3_pdecay0.04_sdecay0.025_hrate0.012_LtimesLEARNING_TIMES-RAN-2-35_agents250_Nneigh16_networksmall_world.pkl \
+data/1parameter_sweep/HL_dynam_cost0.3_pdecay0.04_sdecay0.025_hrate0.012_LtimesLEARNING_TIMES-RAN-2-35_agents250_Nneigh16_networksmall_world.pkl

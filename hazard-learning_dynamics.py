@@ -19,7 +19,7 @@ import argparse
 import pickle
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Mapping
 
 import numpy as np
 
@@ -132,28 +132,36 @@ class HazardLearningDynamics:
         duration_months: int = DURATION_MONTHS,
         network_type: str = NETWORK_TYPE,
         seed: int | None = RANDOM_SEED,
+        parameter_overrides: Mapping[str, float] | None = None,
     ):
         self.n_agents = n_agents
         self.duration_months = duration_months
+        parameters = parameter_overrides or {}
+        self.learning_times = parameters.get("LEARNING_TIMES", LEARNING_TIMES)
+        self.hazard_rate = parameters.get("HAZARD_RATE", HAZARD_RATE)
+        self.severity_decay = parameters.get("SEVERITY_DECAY", SEVERITY_DECAY)
+        self.practice_decay = parameters.get("PRACTICE_DECAY", PRACTICE_DECAY)
+        self.practice_cost = parameters.get("PRACTICE_COST", PRACTICE_COST)
         self.rng = np.random.default_rng(seed)
         self.network = build_social_network(
             n_agents=n_agents, network_type=network_type, rng=self.rng
         )
         self.agent_states = [AgentState(agent_id=agent) for agent in range(n_agents)]
         initial_known = int(round(KNOWN_FRACTION * n_agents))
-        for agent in self.rng.choice(n_agents, size=initial_known, replace=False):
-            self.agent_states[int(agent)].learning_progress = LEARNING_TIMES
-            self.agent_states[int(agent)].practice_knowledge = 1.0
+        #print('INITIAL KNOWN', initial_known)
+        #for agent in self.rng.choice(n_agents, size=initial_known, replace=False):
+        #    self.agent_states[int(agent)].learning_progress = LEARNING_TIMES
         self.time_history: List[int] = []
         self.hazard_frequency_history: List[float] = []
         self.total_events_history: List[int] = []
         self.mean_memory_history: List[float] = []
         self.known_fraction_history: List[float] = []
+        self.mean_knowledge_history: List[float] = []
         self.practice_use_fraction_history: List[float] = []
 
     def hazardFrec(self, time_months: int) -> float:
         """Return the hazard event frequency per agent at time in months."""
-        return HAZARD_INITIAL_FREQUENCY * np.exp(HAZARD_RATE * time_months)
+        return HAZARD_INITIAL_FREQUENCY * np.exp(self.hazard_rate * time_months)
 
     def hazard_freq(self, time_months: int) -> float:
         """Readable alias for :meth:`hazardFrec`."""
@@ -161,7 +169,7 @@ class HazardLearningDynamics:
 
     def _update_hazard_memory(self, frequency: float) -> int:
         total_events = 0
-        decay = np.exp(-SEVERITY_DECAY)
+        decay = np.exp(-self.severity_decay)
         for state in self.agent_states:
             event_count = int(self.rng.poisson(frequency))
             total_events += event_count
@@ -184,13 +192,15 @@ class HazardLearningDynamics:
             exposed = any(previous_use[neighbor] for neighbor in neighbors)
             if exposed:
                 state.learning_progress = min(
-                    LEARNING_TIMES, state.learning_progress + 1.0
+                    self.learning_times, state.learning_progress + 1.0
                 )
             else:
-                state.learning_progress *= np.exp(-PRACTICE_DECAY)
+                state.learning_progress *= np.exp(-self.practice_decay)
             state.practice_knowledge = min(
-                1.0, state.learning_progress / max(LEARNING_TIMES, 1.0)
+                1.0, state.learning_progress / max(self.learning_times, 1.0)
             )
+            if np.random.rand() < KNOWN_FRACTION:
+                state.practice_knowledge = 1.0
 
             if len(self.practice_use_fraction_history) == 0:
                 hazard_response = 1.0 - np.exp(-state.severity_memory / max(MEMORY_RESPONSE_SCALE , 1e-12))
@@ -198,7 +208,7 @@ class HazardLearningDynamics:
                 hazard_response = 1.0 - np.exp(
                     -state.severity_memory / max(MEMORY_RESPONSE_SCALE * (1-self.practice_use_fraction_history[-1]), 1e-12)
                 )
-            cost_factor = np.exp(-PRACTICE_COST / max(COST_SENSITIVITY, 1e-12))
+            cost_factor = np.exp(-self.practice_cost / max(COST_SENSITIVITY, 1e-12))
             use_probability = np.clip(
                 state.practice_knowledge * hazard_response * cost_factor, 0.0, 1.0
             )
@@ -214,6 +224,10 @@ class HazardLearningDynamics:
             total_events = self._update_hazard_memory(frequency)
             self._update_practice_dynamics()
             #self.rng.choice(N_AGENTS, size=n_always_know, replace=False)
+            #for agent in self.rng.choice(N_AGENTS, size=n_always_know, replace=False):
+                #self.agent_states[int(agent)].learning_progress = LEARNING_TIMES
+                #self.agent_states[int(agent)].practice_knowledge 
+                #self.knowledge_history[int(agent)][-1] = 1.0#append(state.practice_knowledge)
 
             self.time_history.append(time_months)
             self.hazard_frequency_history.append(float(frequency))
@@ -222,19 +236,20 @@ class HazardLearningDynamics:
                 float(np.mean([state.severity_memory for state in self.agent_states]))
             )
             
-            
             self.known_fraction_history.append(
                 float(np.mean([state.practice_knowledge >= 1.0 for state in self.agent_states]))
             )
             self.practice_use_fraction_history.append(
                 float(np.mean([state.practice_used for state in self.agent_states]))
             )
+            self.mean_knowledge_history.append(
+                float(np.mean([state.practice_knowledge for state in self.agent_states]))
+            )
             #print("Month", time_months, "Frequency", frequency, "Total events", total_events)
 
-            for agent in self.rng.choice(N_AGENTS, size=n_always_know, replace=False):
-                self.agent_states[int(agent)].learning_progress = LEARNING_TIMES-1
-                #self.agent_states[int(agent)].practice_knowledge = 1.0
-        
+
+        #print('LEEEENENNE', self.learning_times, '\n', self.mean_knowledge_history)
+
         return self._results()
 
     def _results(self) -> dict:
@@ -243,7 +258,8 @@ class HazardLearningDynamics:
             "hazard_frequency_history": self.hazard_frequency_history,
             "total_events_history": self.total_events_history,
             "mean_memory_history": self.mean_memory_history,
-            "known_fraction_history": self.known_fraction_history,
+            #"known_fraction_history": self.known_fraction_history,
+            "mean_knowledge_history": self.mean_knowledge_history,
             "practice_use_fraction_history": self.practice_use_fraction_history,
             "agent_states": [asdict(state) for state in self.agent_states],
             "network": self.network,

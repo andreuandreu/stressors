@@ -21,10 +21,10 @@ NEV_BETA = 0.1
 SEVERITY_DECAY = 0.025  # Exponential decay rate per month
 
 # Practice learning and use
-KNOWN_FRACTION = 0.1 # minimum number of agents that always knows the practice
+KNOWN_FRACTION = 0.05 # minimum number of agents that always knows the practice
 LEARNING_TIMES = 4  # Neighbor-use exposures needed to learn the practice
 PRACTICE_DECAY = 0.04 # Exponential forgetting rate without neighbor exposure
-PRACTICE_COST = 0.35 # Cost of practice adoption relative to hazard impact
+PRACTICE_COST = 0.3 # Cost of practice adoption relative to hazard impact
 COST_SENSITIVITY = 0.5 # Sensitivity of practice adoption to cost relative to hazard impact
 MEMORY_RESPONSE_SCALE = 1.0 # Scale factor for the response to hazard memory in practice use probability
 

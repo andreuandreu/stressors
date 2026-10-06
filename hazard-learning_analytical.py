@@ -27,6 +27,7 @@ from config_LearnHaz import (
     NEV_BETA,
     NEV_MU,
     NETWORK_TYPE,
+    NETWORK_NEIGHBORS,
     N_AGENTS,
     PRACTICE_COST,
     PRACTICE_DECAY,
@@ -59,11 +60,11 @@ class HazardLearningAnalytical:
     """Expected-value dynamics on the simulation's fixed social network."""
     def __init__(
         self,
-        n_agents: int = N_AGENTS,
-        duration_months: int = DURATION_MONTHS,
-        network_type: str = NETWORK_TYPE,
-        seed: int | None = RANDOM_SEED,
-        parameter_overrides: Mapping[str, float] | None = None,
+        n_agents=N_AGENTS,
+        duration_months=DURATION_MONTHS,
+        network_type=NETWORK_TYPE,
+        seed=RANDOM_SEED,
+        parameter_overrides=None,
     ):
         self.n_agents = n_agents
         self.duration_months = duration_months
@@ -71,13 +72,12 @@ class HazardLearningAnalytical:
         self.hazard_initial_frequency = parameters.get(
             "HAZARD_INITIAL_FREQUENCY", HAZARD_INITIAL_FREQUENCY
         )
+        self.learning_times = parameters.get("LEARNING_TIMES", LEARNING_TIMES)
         self.hazard_rate = parameters.get("HAZARD_RATE", HAZARD_RATE)
         self.severity_decay = parameters.get("SEVERITY_DECAY", SEVERITY_DECAY)
         self.practice_decay = parameters.get("PRACTICE_DECAY", PRACTICE_DECAY)
         self.practice_cost = parameters.get("PRACTICE_COST", PRACTICE_COST)
-        self.cost_sensitivity = parameters.get(
-            "COST_SENSITIVITY", COST_SENSITIVITY
-        )
+        self.cost_sensitivity = parameters.get("COST_SENSITIVITY", COST_SENSITIVITY)
         self.rng = np.random.default_rng(seed)
         build_social_network = _load_network_builder()
         self.network = build_social_network(
@@ -117,16 +117,18 @@ class HazardLearningAnalytical:
         """Run the deterministic expected-value dynamics."""
         memory_factor = np.exp(-self.severity_decay)
         cost_factor = np.exp(-self.practice_cost / max(self.cost_sensitivity, 1e-12))
-        n_always_know = int(round((KNOWN_FRACTION*N_AGENTS)))
-        ind_always_know = self.rng.choice(N_AGENTS, size=n_always_know, replace=False)
-        
+        n_always_know = int(round(KNOWN_FRACTION * self.n_agents))
+        ind_always_know = self.rng.choice(
+            self.n_agents, size=n_always_know, replace=False
+        )
+
         for time_months in range(self.duration_months + 1):
             frequency = self.hazardFrec(time_months)
             expected_impact = frequency * self.expected_event_severity
             self.severity_memory = memory_factor * self.severity_memory + expected_impact
 
             exposure_probability = self._neighbor_exposure_probability()
-            learned_progress = np.minimum(LEARNING_TIMES, self.learning_progress + 1.0)
+            learned_progress = np.minimum(self.learning_times, self.learning_progress + 1.0)
             forgotten_progress =  (1-self.practice_decay) * self.learning_progress#forgetting_factor
             self.learning_progress = (
                 exposure_probability * learned_progress
@@ -134,7 +136,7 @@ class HazardLearningAnalytical:
             )
         
             knowledge = np.clip(
-                self.learning_progress / max(LEARNING_TIMES, 1.0), 0, 1.0
+                self.learning_progress / max(self.learning_times, 1.0), 0, 1.0
             )
             knowledge[ind_always_know] = 1
 
@@ -143,8 +145,8 @@ class HazardLearningAnalytical:
             else:
                 hazard_response = 1.0 - np.exp(-self.severity_memory / max(MEMORY_RESPONSE_SCALE * (1-self.practice_use_fraction_history[-1]), 1e-12))
             
-            self.practice_use_probability = np.clip(
-                (knowledge > (LEARNING_TIMES-1)/LEARNING_TIMES).astype(int) * hazard_response * cost_factor, 0.0, 1.0
+            self.practice_use_probability = np.clip(#(knowledge > (self.learning_times-1)/self.learning_times).astype(int) * hazard_response * cost_factor, 0.0, 1.0
+                knowledge * hazard_response * cost_factor, 0.0, 1.0
             )
 
             self.time_history.append(time_months)
@@ -153,7 +155,7 @@ class HazardLearningAnalytical:
             self.mean_memory_history.append(float(np.mean(self.severity_memory)))
             self.mean_knowledge_history.append(float(np.mean(knowledge)))
             self.known_fraction_history.append(
-                float(np.mean(self.learning_progress >= LEARNING_TIMES))
+                float(np.mean(knowledge >= 1.0))
             )
             self.practice_use_fraction_history.append(
                 float(np.mean(self.practice_use_probability))
@@ -179,6 +181,11 @@ def main() -> None:
     parser.add_argument("--network", choices=["small_world", "erdos_renyi", "complete"], default=NETWORK_TYPE)
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     parser.add_argument("--output", default="./data/hazard_learning_analytical_results.pkl")
+    parser.add_argument("--practice-cost", type=float, default=PRACTICE_COST)
+    parser.add_argument("--practice-decay", type=float, default=PRACTICE_DECAY)
+    parser.add_argument("--severity-decay", type=float, default=SEVERITY_DECAY)
+    parser.add_argument("--hazard-rate", type=float, default=HAZARD_RATE)
+
     args = parser.parse_args()
 
     model = HazardLearningAnalytical(
@@ -186,6 +193,12 @@ def main() -> None:
         duration_months=args.months,
         network_type=args.network,
         seed=args.seed,
+        parameter_overrides={
+            "PRACTICE_COST": args.practice_cost,
+            "PRACTICE_DECAY": args.practice_decay,
+            "SEVERITY_DECAY": args.severity_decay,
+            "HAZARD_RATE": args.hazard_rate,
+        },
     )
     results = model.run_simulation()
     #output_path = Path(args.output)
@@ -201,6 +214,7 @@ def main() -> None:
             f"_hrate{model.hazard_rate:g}"
             f"_Ltimes{LEARNING_TIMES}"
             f"_agents{args.agents}"
+            f"_Nneigh{NETWORK_NEIGHBORS}"
             f"_network{args.network}.pkl"
         )
     )
