@@ -23,7 +23,7 @@ PARAMETER_LABELS = {
     "PRACTICE_COST": r"$C_p$",
     "PRACTICE_DECAY": r"$d_p$",
     "SEVERITY_DECAY": r"$d_s$",
-    "HAZARD_RATE": r"$r_h$",
+    "HAZARD_RATE": r"$h_r$",
     "LEARNING_TIMES": r"$L_t$",
 }
 

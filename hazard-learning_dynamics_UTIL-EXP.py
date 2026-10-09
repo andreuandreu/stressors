@@ -40,9 +40,11 @@ from config_LearnHaz import (
     N_AGENTS,
     PRACTICE_COST,
     PRACTICE_DECAY,
+    MAX_PRACTICE_USES_PER_MONTH,
+    USE_COUNT_VARIATION,
     RANDOM_SEED,
     SEVERITY_DECAY,
-    MAX_PRACTICES,
+    TAG,
 )
 
 
@@ -118,10 +120,12 @@ class AgentState:
     practice_knowledge: float = 0.0
     learning_progress: float = 0.0
     practice_used: bool = False
+    practice_uses: int = 0
     severity_history: List[float] = field(default_factory=list)
     memory_history: List[float] = field(default_factory=list)
     knowledge_history: List[float] = field(default_factory=list)
     practice_history: List[bool] = field(default_factory=list)
+    practice_uses_history: List[int] = field(default_factory=list)
 
 
 class HazardLearningDynamics:
@@ -143,15 +147,32 @@ class HazardLearningDynamics:
         self.severity_decay = parameters.get("SEVERITY_DECAY", SEVERITY_DECAY)
         self.practice_decay = parameters.get("PRACTICE_DECAY", PRACTICE_DECAY)
         self.practice_cost = parameters.get("PRACTICE_COST", PRACTICE_COST)
+        self.cost_sensitivity = parameters.get(
+            "COST_SENSITIVITY", COST_SENSITIVITY
+        )
+        self.max_practice_uses = parameters.get(
+            "MAX_PRACTICE_USES_PER_MONTH",
+            MAX_PRACTICE_USES_PER_MONTH,
+        )
+        self.use_count_variation = parameters.get(
+            "USE_COUNT_VARIATION", USE_COUNT_VARIATION
+        )
+
         self.rng = np.random.default_rng(seed)
+        self.reminder_rng = np.random.default_rng(seed)
         self.network = build_social_network(
             n_agents=n_agents, network_type=network_type, rng=self.rng
         )
         self.agent_states = [AgentState(agent_id=agent) for agent in range(n_agents)]
-        initial_known = int(round(KNOWN_FRACTION * n_agents))
-        #print('INITIAL KNOWN', initial_known)
-        #for agent in self.rng.choice(n_agents, size=initial_known, replace=False):
-        #    self.agent_states[int(agent)].learning_progress = LEARNING_TIMES
+        #initial_known = int(round(KNOWN_FRACTION * self.n_agents))
+        #self.always_know_agents = set(
+        #    self.rng.choice(self.n_agents, size=initial_known, replace=False)
+        #)
+        #for agent in self.always_know_agents:
+        #    state = self.agent_states[agent]
+        #    state.learning_progress = float(self.learning_times)
+        #    state.practice_knowledge = 1.0
+
         self.time_history: List[int] = []
         self.hazard_frequency_history: List[float] = []
         self.total_events_history: List[int] = []
@@ -159,6 +180,7 @@ class HazardLearningDynamics:
         self.known_fraction_history: List[float] = []
         self.mean_knowledge_history: List[float] = []
         self.practice_use_fraction_history: List[float] = []
+        self.mean_practice_uses_history: List[float] = []
 
     def hazardFrec(self, time_months: int) -> float:
         """Return the hazard event frequency per agent at time in months."""
@@ -187,39 +209,101 @@ class HazardLearningDynamics:
         return total_events
 
     def _update_practice_dynamics(self) -> None:
-        previous_use = [state.practice_used for state in self.agent_states]
-        for state in self.agent_states:
-            neighbors = self.network[state.agent_id]
-            exposed = any(previous_use[neighbor] for neighbor in neighbors)
-            if exposed:
-                state.learning_progress = min(
-                    self.learning_times, state.learning_progress + 1.0
-                )
-            else:
-                state.learning_progress *= np.exp(-self.practice_decay)
-            state.practice_knowledge = min(
-                1.0, state.learning_progress / max(self.learning_times, 1.0)
-            )
-            if np.random.rand() < KNOWN_FRACTION:
-                state.practice_knowledge = 1.0
+        previous_uses = [state.practice_uses for state in self.agent_states]
+        forgetting_factor = np.exp(-self.practice_decay)
 
-            if len(self.practice_use_fraction_history) == 0:
-                hazard_response = 1.0 - np.exp(-state.severity_memory / max(MEMORY_RESPONSE_SCALE , 1e-12))
-            else:
-                hazard_response = 1.0 - np.exp(
-                    -state.severity_memory / max(MEMORY_RESPONSE_SCALE * (1-self.practice_use_fraction_history[-1]), 1e-12)
-                )
-            cost_factor = np.exp(-self.practice_cost / max(COST_SENSITIVITY, 1e-12))
-            use_probability = np.clip(
-                state.practice_knowledge * hazard_response * cost_factor, 0.0, 1.0
+        for state in self.agent_states:
+            neighbor_uses = sum(
+                previous_uses[neighbor]
+                for neighbor in self.network[state.agent_id]
             )
-            state.practice_used = bool(self.rng.random() < use_probability)
+            had_activity = neighbor_uses > 0 or state.practice_used
+            retention = 1.0 if had_activity else forgetting_factor
+
+            state.learning_progress = min(
+                self.learning_times,
+                retention * state.learning_progress + neighbor_uses,
+            )
+            state.practice_knowledge = min(
+                1.0,
+                state.learning_progress / max(self.learning_times, 1.0),
+            )
+
+        hazard_response = 1.0 - np.exp(
+            -np.fromiter(
+                (state.severity_memory for state in self.agent_states),
+                dtype=float,
+                count=self.n_agents,
+            ) / max(MEMORY_RESPONSE_SCALE, 1e-12)
+        )
+        conditional_use_probabilities = marginal_use_probabilities(
+            hazard_response,
+            self.practice_cost,
+            self.cost_sensitivity,
+            self.max_practice_uses,
+            state.practice_knowledge,
+        )
+
+        '''
+        knows_practice = np.fromiter(
+            (
+                state.learning_progress >= self.learning_times
+                for state in self.agent_states
+            ),
+            dtype=bool,
+            count=self.n_agents,
+        )
+        conditional_use_probabilities[~knows_practice, :] = 0.0
+        '''
+
+        use_counts = np.zeros(self.n_agents, dtype=int)
+        active = np.ones(self.n_agents, dtype=bool)
+
+        for use_index in range(self.max_practice_uses):
+            accepted = active & (
+                self.rng.random(self.n_agents)
+                < conditional_use_probabilities[:, use_index]
+            )
+            use_counts += accepted
+            active = accepted  # Stop after the first rejected marginal use.
+
+        for state, uses in zip(self.agent_states, use_counts):
+            state.practice_uses = int(uses)
+            state.practice_used = state.practice_uses > 0
             state.knowledge_history.append(state.practice_knowledge)
             state.practice_history.append(state.practice_used)
+            state.practice_uses_history.append(state.practice_uses)
+
+    def _top_up_known_fraction(self) -> None:
+        """At month end, randomly restore the minimum fully-known fraction."""
+        target_known = min(
+            self.n_agents,
+            int(np.ceil(KNOWN_FRACTION * self.n_agents)),
+        )
+        known = np.fromiter(
+            (
+                state.learning_progress >= self.learning_times
+                for state in self.agent_states
+            ),
+            dtype=bool,
+            count=self.n_agents,
+        )
+        deficit = target_known - int(np.count_nonzero(known))
+
+        #if deficit > 0:
+        candidates = np.flatnonzero(~known)
+        selected = self.reminder_rng.choice(
+                ~known, size=target_known, replace=True
+        )
+        selected = self.rng.choice(N_AGENTS, size=target_known, replace=False)
+        for agent in selected:
+                state = self.agent_states[int(agent)]
+                state.learning_progress = float(self.learning_times)
+                #state.practice_knowledge = 1.0
 
     def run_simulation(self) -> dict:
         """Run the model and return aggregate and per-agent histories."""
-        n_always_know = int(round((KNOWN_FRACTION*N_AGENTS)))
+        #n_always_know = int(round((KNOWN_FRACTION*N_AGENTS)))
         for time_months in range(self.duration_months + 1):
             frequency = self.hazardFrec(time_months)
             total_events = self._update_hazard_memory(frequency)
@@ -246,8 +330,12 @@ class HazardLearningDynamics:
             self.mean_knowledge_history.append(
                 float(np.mean([state.practice_knowledge for state in self.agent_states]))
             )
-            #print("Month", time_months, "Frequency", frequency, "Total events", total_events)
+            self.mean_practice_uses_history.append(
+                float(np.mean([state.practice_uses for state in self.agent_states]))
+            )
 
+            # Month-end reminder: affects knowledge and use eligibility next month.
+            self._top_up_known_fraction()
 
         #print('LEEEENENNE', self.learning_times, '\n', self.mean_knowledge_history)
 
@@ -262,6 +350,7 @@ class HazardLearningDynamics:
             #"known_fraction_history": self.known_fraction_history,
             "mean_knowledge_history": self.mean_knowledge_history,
             "practice_use_fraction_history": self.practice_use_fraction_history,
+            "mean_practice_uses_history": self.mean_practice_uses_history,
             "agent_states": [asdict(state) for state in self.agent_states],
             "network": self.network,
         }
@@ -275,6 +364,61 @@ class HazardLearningDynamics:
         with output_path.open("wb") as output_file:
             pickle.dump(self._results(), output_file)
 
+
+#
+def marginal_use_probabilities(
+    hazard_response,
+    practice_cost: float,
+    cost_sensitivity: float,
+    max_uses: int,
+    practice_knowledge: float,
+) -> np.ndarray:
+    """Conditional probabilities for successive uses with increasing marginal cost."""
+
+    #print("knowledge fraction per agent must be positive and non-zero", practice_knowledge)
+    #if practice_knowledge <= 0:
+    #    practice_knowledge = KNOWN_FRACTION
+
+    response = np.clip(np.asarray(hazard_response, dtype=float), 0.0, 1.0)
+
+    # Zero-based exponent gives the first use benefit h, second h*(1-h), etc.
+    use_exponent = np.arange(max_uses, dtype=float)
+    marginal_benefit = response[:, None] * np.power(
+        1.0 - response[:, None], use_exponent[None, :]
+    )
+
+    # One-based cost index: the kth use has marginal cost k * base_cost.
+    use_number = np.arange(1, max_uses + 1, dtype=float)
+    marginal_cost = (
+        cost_sensitivity * practice_cost * use_number[None, :]
+    )
+
+    
+
+    baseline_x = np.clip(-marginal_cost / max(practice_knowledge, KNOWN_FRACTION), -700.0, 700.0)
+    choice_x = np.clip(
+        (marginal_benefit - marginal_cost) / max(practice_knowledge, KNOWN_FRACTION),
+        -700.0,
+        700.0,
+    )
+
+    baseline_probability = 1.0 / (1.0 + np.exp(-baseline_x))
+    choice_probability = 1.0 / (1.0 + np.exp(-choice_x))
+
+    probabilities = (
+        choice_probability - baseline_probability
+    ) / np.maximum(1.0 - baseline_probability, 1e-12)
+
+    # No benefit means zero chance of that use; positive benefit stays smooth.
+    probabilities = np.where(
+        marginal_benefit > 0.0,
+        np.clip(probabilities, 0.0, 1.0),
+        0.0,
+    )
+
+    #print('dadadada', len(marginal_cost), len(marginal_benefit), np.max(marginal_benefit - marginal_cost))
+
+    return practice_knowledge * (marginal_benefit - marginal_cost)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -305,7 +449,8 @@ def main() -> None:
             f"_Ltimes{LEARNING_TIMES}"
             f"_agents{args.agents}"
             f"_Nneigh{NETWORK_NEIGHBORS:g}"
-            f"_network{args.network}.pkl"
+            f"_network{args.network}"
+            f"_CoUt{TAG}.pkl"
         )
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
