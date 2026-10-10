@@ -7,7 +7,7 @@ TIME_STEP_MONTHS = 1
 
 # Social network. SMALL_WORLD is the default Watts-Strogatz-style graph.
 NETWORK_TYPE = "small_world"  # small_world, erdos_renyi, or complete
-NETWORK_NEIGHBORS = 8  # Even number of initial ring neighbors
+NETWORK_NEIGHBORS = 10  # Even number of initial ring neighbors
 NETWORK_REWIRE_PROBABILITY = 0.05
 NETWORK_EDGE_PROBABILITY = 0.04  # Used by erdos_renyi
 
@@ -22,14 +22,14 @@ SEVERITY_DECAY = 0.025  # Exponential decay rate per month
 
 # Practice learning and use
 KNOWN_FRACTION = 0.01 # minimum number of agents that always knows the practice
-LEARNING_TIMES = 12  # Neighbor-use exposures needed to learn the practice
+LEARNING_TIMES = 8 # Neighbor-use exposures needed to learn the practice
 PRACTICE_DECAY = 0.04 # Exponential forgetting rate without neighbor exposure
-PRACTICE_COST = 0.15 # Cost of practice adoption relative to hazard impact
-COST_SENSITIVITY = 1.0 # Sensitivity of practice adoption to cost relative to hazard impact
-MAX_PRACTICE_USES_PER_MONTH = 30
-USE_COUNT_VARIATION = 0.09  # Soft-choice scale; tune or estimate from data
+PRACTICE_COST = 0.11 # Cost of practice adoption relative to hazard impact
+COST_SENSITIVITY = 0.5 # Sensitivity of practice adoption to cost relative to hazard impact
+MAX_USES = 30 #maximum number of practice uses per month
 MEMORY_RESPONSE_SCALE = 1.0 # Scale factor for the response to hazard memory in practice use probability
 TAG = "Y"
+UTILITY = False
 
 # Reproducible default for the command-line example
 RANDOM_SEED = 123

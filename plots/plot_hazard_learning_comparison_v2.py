@@ -60,9 +60,9 @@ def load_model(filename: str, module_name: str):
 def _mean_uses_from_agent_histories(results: dict) -> np.ndarray:
     """Calculate mean uses per month from per-agent histories."""
     histories = [
-        state["practice_uses_history"]
+        state["mean_practice_uses_history"]
         for state in results.get("agent_states", [])
-        if "practice_uses_history" in state
+        if "mean_practice_uses_history" in state
     ]
     if not histories:
         raise KeyError(
@@ -85,7 +85,7 @@ def simulation_metrics(results: dict) -> dict[str, np.ndarray]:
         "events": np.asarray(results["total_events_history"], dtype=float),
         "memory": np.asarray(results["mean_memory_history"], dtype=float),
         "knowledge": np.mean(np.asarray(knowledge_histories, dtype=float), axis=0),
-        "use": np.asarray(results["practice_use_fraction_history"], dtype=float),
+        "use": np.asarray(results["mean_practice_use_fraction_history"], dtype=float),
         "mean_uses": np.asarray(mean_uses, dtype=float),
     }
 
@@ -104,7 +104,7 @@ def analytical_metrics(results: dict) -> dict[str, np.ndarray]:
         "events": np.asarray(results["expected_events_history"], dtype=float),
         "memory": np.asarray(results["mean_memory_history"], dtype=float),
         "knowledge": np.asarray(results["mean_knowledge_history"], dtype=float),
-        "use": np.asarray(results["practice_use_fraction_history"], dtype=float),
+        "use": np.asarray(results["mean_practice_use_fraction_history"], dtype=float),
         "mean_uses": np.asarray(mean_uses, dtype=float),
     }
 
@@ -139,7 +139,7 @@ def plot_comparison(simulation: dict, analytical: dict):
         axis.set_ylabel(labels[metric])
         axis.grid(False)
 
-        if metric == "use":
+        if metric == "use" :#or metric == "mean_uses"
             axis.set_yscale("log")
 
     # There are five metrics, so hide the unused sixth subplot.

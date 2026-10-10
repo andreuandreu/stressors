@@ -42,7 +42,8 @@ from config_LearnHaz import (
     PRACTICE_DECAY,
     RANDOM_SEED,
     SEVERITY_DECAY,
-    MAX_PRACTICES,
+    MAX_USES,
+    UTILITY,
 )
 
 
@@ -118,10 +119,12 @@ class AgentState:
     practice_knowledge: float = 0.0
     learning_progress: float = 0.0
     practice_used: bool = False
+    practice_uses: float = 0.0
     severity_history: List[float] = field(default_factory=list)
     memory_history: List[float] = field(default_factory=list)
     knowledge_history: List[float] = field(default_factory=list)
     practice_history: List[bool] = field(default_factory=list)
+    practice_uses_history: List[float] = field(default_factory=list)
 
 
 class HazardLearningDynamics:
@@ -158,7 +161,9 @@ class HazardLearningDynamics:
         self.mean_memory_history: List[float] = []
         self.known_fraction_history: List[float] = []
         self.mean_knowledge_history: List[float] = []
+        self.mean_practice_uses_history: List[float] = []
         self.practice_use_fraction_history: List[float] = []
+    
 
     def hazardFrec(self, time_months: int) -> float:
         """Return the hazard event frequency per agent at time in months."""
@@ -188,18 +193,21 @@ class HazardLearningDynamics:
 
     def _update_practice_dynamics(self) -> None:
         previous_use = [state.practice_used for state in self.agent_states]
+        previous_uses = [state.practice_uses for state in self.agent_states]
         for state in self.agent_states:
             neighbors = self.network[state.agent_id]
             exposed = any(previous_use[neighbor] for neighbor in neighbors)
+            seen_uses = sum(previous_uses[neighbor] for neighbor in neighbors)
             if exposed:
                 state.learning_progress = min(
-                    self.learning_times, state.learning_progress + 1.0
+                    self.learning_times, state.learning_progress + seen_uses
                 )
             else:
                 state.learning_progress *= np.exp(-self.practice_decay)
             state.practice_knowledge = min(
                 1.0, state.learning_progress / max(self.learning_times, 1.0)
             )
+            #makes sure that a minimum fraction of agents always know the practice
             if np.random.rand() < KNOWN_FRACTION:
                 state.practice_knowledge = 1.0
 
@@ -209,13 +217,40 @@ class HazardLearningDynamics:
                 hazard_response = 1.0 - np.exp(
                     -state.severity_memory / max(MEMORY_RESPONSE_SCALE * (1-self.practice_use_fraction_history[-1]), 1e-12)
                 )
-            cost_factor = np.exp(-self.practice_cost / max(COST_SENSITIVITY, 1e-12))
-            use_probability = np.clip(
-                state.practice_knowledge * hazard_response * cost_factor, 0.0, 1.0
-            )
-            state.practice_used = bool(self.rng.random() < use_probability)
+
+            if UTILITY:
+                # Implement utility-based decision-making here
+                if state.practice_knowledge < 1e-6:
+                    state.practice_used = False
+                    state.practice_uses = 0.0
+                
+                else:
+                    possible_uses = np.arange(1, MAX_USES)
+                    marginal_uses = hazard_response**possible_uses - self.practice_cost*possible_uses/max(state.practice_knowledge, 1e-6)
+                    optimal_uses = possible_uses[np.argmax(marginal_uses)]
+                    
+                    if marginal_uses[optimal_uses] > 0 and optimal_uses <= MAX_USES and optimal_uses >= 1:
+                        #print('OU', optimal_uses, 'MC', max(marginal_uses), 'K', state.practice_knowledge, 'Hr',hazard_response )
+                        state.practice_used = True
+                        state.practice_uses = int(optimal_uses)
+                    else:
+                        state.practice_used = False
+                        state.practice_uses = 0.0
+                
+            else:
+                cost_factor = np.exp(-self.practice_cost / max(COST_SENSITIVITY, 1e-12))
+                use_probability = np.clip(
+                    state.practice_knowledge * hazard_response * cost_factor, 0.0, 1.0
+                )
+                use_practice = bool(self.rng.random() < use_probability)
+                state.practice_used = use_practice
+                if use_practice:
+                    state.practice_uses = 1.0
+                else:
+                    state.practice_uses = 0.0
             state.knowledge_history.append(state.practice_knowledge)
             state.practice_history.append(state.practice_used)
+            state.practice_uses_history.append(state.practice_uses)
 
     def run_simulation(self) -> dict:
         """Run the model and return aggregate and per-agent histories."""
@@ -243,10 +278,16 @@ class HazardLearningDynamics:
             self.practice_use_fraction_history.append(
                 float(np.mean([state.practice_used for state in self.agent_states]))
             )
+        
             self.mean_knowledge_history.append(
                 float(np.mean([state.practice_knowledge for state in self.agent_states]))
             )
-            #print("Month", time_months, "Frequency", frequency, "Total events", total_events)
+            self.mean_practice_uses_history.append(
+                float(np.mean([state.practice_uses for state in self.agent_states]))
+            )
+
+            if time_months % 33 == 0:  # Print every 12 months
+                print("Month", time_months, "USES", self.mean_practice_uses_history[-1], "use frac", self.practice_use_fraction_history[-1])
 
 
         #print('LEEEENENNE', self.learning_times, '\n', self.mean_knowledge_history)
@@ -259,9 +300,10 @@ class HazardLearningDynamics:
             "hazard_frequency_history": self.hazard_frequency_history,
             "total_events_history": self.total_events_history,
             "mean_memory_history": self.mean_memory_history,
-            #"known_fraction_history": self.known_fraction_history,
+            "known_fraction_history": self.known_fraction_history,
             "mean_knowledge_history": self.mean_knowledge_history,
-            "practice_use_fraction_history": self.practice_use_fraction_history,
+            "mean_practice_uses_history": self.mean_practice_uses_history,
+            "mean_practice_use_fraction_history": self.practice_use_fraction_history,
             "agent_states": [asdict(state) for state in self.agent_states],
             "network": self.network,
         }

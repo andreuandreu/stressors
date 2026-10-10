@@ -99,6 +99,7 @@ class HazardLearningAnalytical:
         self.mean_knowledge_history = []
         self.known_fraction_history = []
         self.practice_use_fraction_history = []
+        self.practice_uses_history = []
 
     def hazardFrec(self, time_months: int) -> float:
         """Return the hazard event frequency per agent at time in months."""
@@ -160,6 +161,7 @@ class HazardLearningAnalytical:
             self.practice_use_fraction_history.append(
                 float(np.mean(self.practice_use_probability))
             )
+            self.practice_uses_history.append(1.0)
 
         return {
             "time_history": self.time_history,
@@ -168,7 +170,8 @@ class HazardLearningAnalytical:
             "mean_memory_history": self.mean_memory_history,
             "mean_knowledge_history": self.mean_knowledge_history,
             "known_fraction_history": self.known_fraction_history,
-            "practice_use_fraction_history": self.practice_use_fraction_history,
+            "mean_practice_use_fraction_history": self.practice_use_fraction_history,
+            "mean_practice_uses_history": self.practice_uses_history,
             "expected_event_severity": self.expected_event_severity,
             "network": self.network,
         }
